@@ -59,7 +59,7 @@ The latest bundled numbers are in `results/comprehensive_eval.json` and `results
 The repository is initialized on branch `main`. Large `data/cache/*.pt` files are **not** committed.
 
 ```bash
-git remote add origin https://github.com/<you>/length-routing-study.git
+git remote add origin https://github.com/ZeroSky345/length-routing-study.git
 git push -u origin main
 ```
 
