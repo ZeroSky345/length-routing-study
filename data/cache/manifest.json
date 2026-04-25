@@ -1,1 +1,242 @@
-/root/length-aware-sparse-attn/data/cache_128d/manifest.json
+{
+  "L4096_sparse_low": {
+    "file": "qkv_len_4096_sparse_low_seed_42.pt",
+    "seq_len": 4096,
+    "scenario": "sparse_low"
+  },
+  "L4096_sparse_med": {
+    "file": "qkv_len_4096_sparse_med_seed_42.pt",
+    "seq_len": 4096,
+    "scenario": "sparse_med"
+  },
+  "L4096_sparse_high": {
+    "file": "qkv_len_4096_sparse_high_seed_42.pt",
+    "seq_len": 4096,
+    "scenario": "sparse_high"
+  },
+  "L4096_lm_sink_local": {
+    "file": "qkv_len_4096_lm_sink_local_seed_42.pt",
+    "seq_len": 4096,
+    "scenario": "lm_sink_local"
+  },
+  "L4096_lm_sparse_global": {
+    "file": "qkv_len_4096_lm_sparse_global_seed_42.pt",
+    "seq_len": 4096,
+    "scenario": "lm_sparse_global"
+  },
+  "L4096_lm_hierarchical": {
+    "file": "qkv_len_4096_lm_hierarchical_seed_42.pt",
+    "seq_len": 4096,
+    "scenario": "lm_hierarchical"
+  },
+  "L4096_lm_local_periodic": {
+    "file": "qkv_len_4096_lm_local_periodic_seed_42.pt",
+    "seq_len": 4096,
+    "scenario": "lm_local_periodic"
+  },
+  "L4096_lm_mixed": {
+    "file": "qkv_len_4096_lm_mixed_seed_42.pt",
+    "seq_len": 4096,
+    "scenario": "lm_mixed"
+  },
+  "L8192_sparse_low": {
+    "file": "qkv_len_8192_sparse_low_seed_42.pt",
+    "seq_len": 8192,
+    "scenario": "sparse_low"
+  },
+  "L8192_sparse_med": {
+    "file": "qkv_len_8192_sparse_med_seed_42.pt",
+    "seq_len": 8192,
+    "scenario": "sparse_med"
+  },
+  "L8192_sparse_high": {
+    "file": "qkv_len_8192_sparse_high_seed_42.pt",
+    "seq_len": 8192,
+    "scenario": "sparse_high"
+  },
+  "L8192_lm_sink_local": {
+    "file": "qkv_len_8192_lm_sink_local_seed_42.pt",
+    "seq_len": 8192,
+    "scenario": "lm_sink_local"
+  },
+  "L8192_lm_sparse_global": {
+    "file": "qkv_len_8192_lm_sparse_global_seed_42.pt",
+    "seq_len": 8192,
+    "scenario": "lm_sparse_global"
+  },
+  "L8192_lm_hierarchical": {
+    "file": "qkv_len_8192_lm_hierarchical_seed_42.pt",
+    "seq_len": 8192,
+    "scenario": "lm_hierarchical"
+  },
+  "L8192_lm_local_periodic": {
+    "file": "qkv_len_8192_lm_local_periodic_seed_42.pt",
+    "seq_len": 8192,
+    "scenario": "lm_local_periodic"
+  },
+  "L8192_lm_mixed": {
+    "file": "qkv_len_8192_lm_mixed_seed_42.pt",
+    "seq_len": 8192,
+    "scenario": "lm_mixed"
+  },
+  "L16384_sparse_low": {
+    "file": "qkv_len_16384_sparse_low_seed_42.pt",
+    "seq_len": 16384,
+    "scenario": "sparse_low"
+  },
+  "L16384_sparse_med": {
+    "file": "qkv_len_16384_sparse_med_seed_42.pt",
+    "seq_len": 16384,
+    "scenario": "sparse_med"
+  },
+  "L16384_sparse_high": {
+    "file": "qkv_len_16384_sparse_high_seed_42.pt",
+    "seq_len": 16384,
+    "scenario": "sparse_high"
+  },
+  "L16384_lm_sink_local": {
+    "file": "qkv_len_16384_lm_sink_local_seed_42.pt",
+    "seq_len": 16384,
+    "scenario": "lm_sink_local"
+  },
+  "L16384_lm_sparse_global": {
+    "file": "qkv_len_16384_lm_sparse_global_seed_42.pt",
+    "seq_len": 16384,
+    "scenario": "lm_sparse_global"
+  },
+  "L16384_lm_hierarchical": {
+    "file": "qkv_len_16384_lm_hierarchical_seed_42.pt",
+    "seq_len": 16384,
+    "scenario": "lm_hierarchical"
+  },
+  "L16384_lm_local_periodic": {
+    "file": "qkv_len_16384_lm_local_periodic_seed_42.pt",
+    "seq_len": 16384,
+    "scenario": "lm_local_periodic"
+  },
+  "L16384_lm_mixed": {
+    "file": "qkv_len_16384_lm_mixed_seed_42.pt",
+    "seq_len": 16384,
+    "scenario": "lm_mixed"
+  },
+  "L32768_sparse_low": {
+    "file": "qkv_len_32768_sparse_low_seed_42.pt",
+    "seq_len": 32768,
+    "scenario": "sparse_low"
+  },
+  "L32768_sparse_med": {
+    "file": "qkv_len_32768_sparse_med_seed_42.pt",
+    "seq_len": 32768,
+    "scenario": "sparse_med"
+  },
+  "L32768_sparse_high": {
+    "file": "qkv_len_32768_sparse_high_seed_42.pt",
+    "seq_len": 32768,
+    "scenario": "sparse_high"
+  },
+  "L32768_lm_sink_local": {
+    "file": "qkv_len_32768_lm_sink_local_seed_42.pt",
+    "seq_len": 32768,
+    "scenario": "lm_sink_local"
+  },
+  "L32768_lm_sparse_global": {
+    "file": "qkv_len_32768_lm_sparse_global_seed_42.pt",
+    "seq_len": 32768,
+    "scenario": "lm_sparse_global"
+  },
+  "L32768_lm_hierarchical": {
+    "file": "qkv_len_32768_lm_hierarchical_seed_42.pt",
+    "seq_len": 32768,
+    "scenario": "lm_hierarchical"
+  },
+  "L32768_lm_local_periodic": {
+    "file": "qkv_len_32768_lm_local_periodic_seed_42.pt",
+    "seq_len": 32768,
+    "scenario": "lm_local_periodic"
+  },
+  "L32768_lm_mixed": {
+    "file": "qkv_len_32768_lm_mixed_seed_42.pt",
+    "seq_len": 32768,
+    "scenario": "lm_mixed"
+  },
+  "L65536_sparse_low": {
+    "file": "qkv_len_65536_sparse_low_seed_42.pt",
+    "seq_len": 65536,
+    "scenario": "sparse_low"
+  },
+  "L65536_sparse_med": {
+    "file": "qkv_len_65536_sparse_med_seed_42.pt",
+    "seq_len": 65536,
+    "scenario": "sparse_med"
+  },
+  "L65536_sparse_high": {
+    "file": "qkv_len_65536_sparse_high_seed_42.pt",
+    "seq_len": 65536,
+    "scenario": "sparse_high"
+  },
+  "L65536_lm_sink_local": {
+    "file": "qkv_len_65536_lm_sink_local_seed_42.pt",
+    "seq_len": 65536,
+    "scenario": "lm_sink_local"
+  },
+  "L65536_lm_sparse_global": {
+    "file": "qkv_len_65536_lm_sparse_global_seed_42.pt",
+    "seq_len": 65536,
+    "scenario": "lm_sparse_global"
+  },
+  "L65536_lm_hierarchical": {
+    "file": "qkv_len_65536_lm_hierarchical_seed_42.pt",
+    "seq_len": 65536,
+    "scenario": "lm_hierarchical"
+  },
+  "L65536_lm_local_periodic": {
+    "file": "qkv_len_65536_lm_local_periodic_seed_42.pt",
+    "seq_len": 65536,
+    "scenario": "lm_local_periodic"
+  },
+  "L65536_lm_mixed": {
+    "file": "qkv_len_65536_lm_mixed_seed_42.pt",
+    "seq_len": 65536,
+    "scenario": "lm_mixed"
+  },
+  "L131072_sparse_low": {
+    "file": "qkv_len_131072_sparse_low_seed_42.pt",
+    "seq_len": 131072,
+    "scenario": "sparse_low"
+  },
+  "L131072_sparse_med": {
+    "file": "qkv_len_131072_sparse_med_seed_42.pt",
+    "seq_len": 131072,
+    "scenario": "sparse_med"
+  },
+  "L131072_sparse_high": {
+    "file": "qkv_len_131072_sparse_high_seed_42.pt",
+    "seq_len": 131072,
+    "scenario": "sparse_high"
+  },
+  "L131072_lm_sink_local": {
+    "file": "qkv_len_131072_lm_sink_local_seed_42.pt",
+    "seq_len": 131072,
+    "scenario": "lm_sink_local"
+  },
+  "L131072_lm_sparse_global": {
+    "file": "qkv_len_131072_lm_sparse_global_seed_42.pt",
+    "seq_len": 131072,
+    "scenario": "lm_sparse_global"
+  },
+  "L131072_lm_hierarchical": {
+    "file": "qkv_len_131072_lm_hierarchical_seed_42.pt",
+    "seq_len": 131072,
+    "scenario": "lm_hierarchical"
+  },
+  "L131072_lm_local_periodic": {
+    "file": "qkv_len_131072_lm_local_periodic_seed_42.pt",
+    "seq_len": 131072,
+    "scenario": "lm_local_periodic"
+  },
+  "L131072_lm_mixed": {
+    "file": "qkv_len_131072_lm_mixed_seed_42.pt",
+    "seq_len": 131072,
+    "scenario": "lm_mixed"
+  }
+}
