@@ -1,0 +1,21 @@
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+dist/
+build/
+*.egg-info/
+.env
+
+# Large QKV tensors (regenerate with scripts/generate_high_sparsity_qkv.py + generate_lm_patterns_qkv.py)
+data/cache/*.pt
+
+# Generated logs and ad-hoc artifacts
+*.log
+results/*.log
+
+# Optional / legacy result dumps (canonical results are tracked below)
+results/*
+!results/README.md
+!results/comprehensive_eval.json
+!results/variant_comparison.json

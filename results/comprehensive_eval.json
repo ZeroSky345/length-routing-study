@@ -1,0 +1,2971 @@
+{
+  "config": {
+    "lengths": [
+      4096,
+      8192,
+      16384,
+      32768,
+      65536,
+      131072
+    ],
+    "scenarios": [
+      "sparse_low",
+      "sparse_med",
+      "sparse_high",
+      "lm_sink_local",
+      "lm_sparse_global",
+      "lm_hierarchical",
+      "lm_local_periodic",
+      "lm_mixed"
+    ],
+    "cache_dir": "data/cache",
+    "seed": 42,
+    "device": "cuda",
+    "warmup": 2,
+    "repeats": 3,
+    "output": "results/comprehensive_eval.json"
+  },
+  "aggregated": [
+    {
+      "seq_len": 4096,
+      "n": 8,
+      "sparsity_avg": 0.3658,
+      "flash_ms_avg": 0.488,
+      "pbs_fixed_t_ms": 1.8165,
+      "pbs_fixed_sel_ms": 1.1883,
+      "pbs_fixed_ker_ms": 0.6282,
+      "pbs_fixed_mse": 0.0007,
+      "pbs_fixed_kl": 0.0003,
+      "ours_t_ms": 1.1641,
+      "ours_sel_ms": 0.7537,
+      "ours_ker_ms": 0.4104,
+      "ours_mse": 0.0098,
+      "ours_kl": 0.0003,
+      "flex_fixed_t_ms": 5.2313,
+      "flex_fixed_mse": 0.0003,
+      "flex_fixed_kl": 0.0002,
+      "gain_pct_vs_pbs": 35.92,
+      "gain_pct_vs_flex": 77.75,
+      "gain_pct": 35.92,
+      "by_scenario": {
+        "sparse_low": {
+          "sparsity": 0.285,
+          "pbs_ms": 1.8432,
+          "flex_ms": 10.0413,
+          "ours_ms": 1.6971,
+          "pbs_mse": 3.11e-05,
+          "flex_mse": 0.0002052,
+          "ours_mse": 3.11e-05,
+          "gain_vs_pbs": 7.93,
+          "ours_decision": "[pbs](threshold=0.9, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 1.43 ms (sel=1.09 ms, kernel\u22480.27 ms); adaptive thr=0.9, seg=256; Flex skipped (L=4096 < flex_min=65536) | all candidates: pbs=1.43ms"
+        },
+        "sparse_med": {
+          "sparsity": 0.344,
+          "pbs_ms": 2.1446,
+          "flex_ms": 4.7527,
+          "ours_ms": 0.3071,
+          "pbs_mse": 0.00014,
+          "flex_mse": 8.77e-05,
+          "ours_mse": 0.0048705,
+          "gain_vs_pbs": 85.68,
+          "ours_decision": "[structural](strategy=GlobalSinkWindow, sink_blocks=2, window_blocks=4, stride_blocks=2, active_frac=0.7) \u2014 Structural(O(1)): est 0.28 ms (sel=0.005 ms, kernel\u22480.28 ms) | all candidates: structural=0.28ms, knorm=0.77ms, pbs=1.43ms"
+        },
+        "sparse_high": {
+          "sparsity": 0.4357,
+          "pbs_ms": 1.7022,
+          "flex_ms": 3.4028,
+          "ours_ms": 0.3298,
+          "pbs_mse": 0.0051633,
+          "flex_mse": 4.9e-06,
+          "ours_mse": 0.0245239,
+          "gain_vs_pbs": 80.63,
+          "ours_decision": "[structural](strategy=GlobalSinkWindow, sink_blocks=2, window_blocks=4, stride_blocks=2, active_frac=0.62) \u2014 Structural(O(1)): est 0.25 ms (sel=0.005 ms, kernel\u22480.24 ms) | all candidates: structural=0.25ms, knorm=0.74ms, pbs=1.42ms"
+        },
+        "lm_sink_local": {
+          "sparsity": 0.42,
+          "pbs_ms": 1.6282,
+          "flex_ms": 3.5546,
+          "ours_ms": 1.6387,
+          "pbs_mse": 1.12e-05,
+          "flex_mse": 0.0007404,
+          "ours_mse": 1.34e-05,
+          "gain_vs_pbs": -0.64,
+          "ours_decision": "[pbs](threshold=0.89, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 1.42 ms (sel=1.09 ms, kernel\u22480.22 ms); adaptive thr=0.89, seg=256; Flex skipped (L=4096 < flex_min=65536) | all candidates: pbs=1.42ms"
+        },
+        "lm_sparse_global": {
+          "sparsity": 0.364,
+          "pbs_ms": 1.8456,
+          "flex_ms": 10.0291,
+          "ours_ms": 0.3368,
+          "pbs_mse": 0.0,
+          "flex_mse": 0.000276,
+          "ours_mse": 0.0484237,
+          "gain_vs_pbs": 81.75,
+          "ours_decision": "[structural](strategy=GlobalSinkWindow, sink_blocks=2, window_blocks=4, stride_blocks=2, active_frac=0.7) \u2014 Structural(O(1)): est 0.28 ms (sel=0.005 ms, kernel\u22480.28 ms) | all candidates: structural=0.28ms, knorm=0.77ms, pbs=1.43ms"
+        },
+        "lm_hierarchical": {
+          "sparsity": 0.2753,
+          "pbs_ms": 1.7009,
+          "flex_ms": 3.4386,
+          "ours_ms": 1.6937,
+          "pbs_mse": 0.0001413,
+          "flex_mse": 3.45e-05,
+          "ours_mse": 0.0001413,
+          "gain_vs_pbs": 0.42,
+          "ours_decision": "[pbs](threshold=0.9, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 1.44 ms (sel=1.09 ms, kernel\u22480.27 ms); adaptive thr=0.9, seg=256; Flex skipped (L=4096 < flex_min=65536) | all candidates: pbs=1.44ms"
+        },
+        "lm_local_periodic": {
+          "sparsity": 0.3756,
+          "pbs_ms": 1.8371,
+          "flex_ms": 3.1382,
+          "ours_ms": 1.6507,
+          "pbs_mse": 2.1e-05,
+          "flex_mse": 0.0002741,
+          "ours_mse": 2.1e-05,
+          "gain_vs_pbs": 10.15,
+          "ours_decision": "[pbs](threshold=0.9, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 1.42 ms (sel=1.09 ms, kernel\u22480.23 ms); adaptive thr=0.9, seg=256; Flex skipped (L=4096 < flex_min=65536) | all candidates: pbs=1.42ms"
+        },
+        "lm_mixed": {
+          "sparsity": 0.4268,
+          "pbs_ms": 1.8302,
+          "flex_ms": 3.4929,
+          "ours_ms": 1.6589,
+          "pbs_mse": 1.22e-05,
+          "flex_mse": 0.001012,
+          "ours_mse": 1.45e-05,
+          "gain_vs_pbs": 9.36,
+          "ours_decision": "[pbs](threshold=0.89, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 1.42 ms (sel=1.09 ms, kernel\u22480.21 ms); adaptive thr=0.89, seg=256; Flex skipped (L=4096 < flex_min=65536) | all candidates: pbs=1.42ms"
+        }
+      }
+    },
+    {
+      "seq_len": 8192,
+      "n": 8,
+      "sparsity_avg": 0.3901,
+      "flash_ms_avg": 1.5765,
+      "pbs_fixed_t_ms": 3.5183,
+      "pbs_fixed_sel_ms": 1.6685,
+      "pbs_fixed_ker_ms": 1.8498,
+      "pbs_fixed_mse": 0.0007,
+      "pbs_fixed_kl": 0.0003,
+      "ours_t_ms": 2.2764,
+      "ours_sel_ms": 1.055,
+      "ours_ker_ms": 1.2214,
+      "ours_mse": 0.0133,
+      "ours_kl": 0.0003,
+      "flex_fixed_t_ms": 8.4491,
+      "flex_fixed_mse": 0.0002,
+      "flex_fixed_kl": 0.0001,
+      "gain_pct_vs_pbs": 35.3,
+      "gain_pct_vs_flex": 73.06,
+      "gain_pct": 35.3,
+      "by_scenario": {
+        "sparse_low": {
+          "sparsity": 0.2792,
+          "pbs_ms": 3.6352,
+          "flex_ms": 13.5837,
+          "ours_ms": 3.5632,
+          "pbs_mse": 2.76e-05,
+          "flex_mse": 0.0002996,
+          "ours_mse": 2.76e-05,
+          "gain_vs_pbs": 1.98,
+          "ours_decision": "[pbs](threshold=0.9, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 3.56 ms (sel=2.19 ms, kernel\u22481.08 ms); adaptive thr=0.9, seg=256; Flex skipped (L=8192 < flex_min=65536) | all candidates: pbs=3.56ms"
+        },
+        "sparse_med": {
+          "sparsity": 0.3422,
+          "pbs_ms": 3.6181,
+          "flex_ms": 7.4711,
+          "ours_ms": 0.436,
+          "pbs_mse": 0.00013,
+          "flex_mse": 3.2e-05,
+          "ours_mse": 0.0057609,
+          "gain_vs_pbs": 87.95,
+          "ours_decision": "[structural](strategy=GlobalSinkWindow, sink_blocks=2, window_blocks=6, stride_blocks=2, active_frac=0.7) \u2014 Structural(O(1)): est 1.11 ms (sel=0.005 ms, kernel\u22481.10 ms) | all candidates: structural=1.11ms, knorm=1.64ms, pbs=3.53ms"
+        },
+        "sparse_high": {
+          "sparsity": 0.4667,
+          "pbs_ms": 3.5601,
+          "flex_ms": 7.1789,
+          "ours_ms": 0.4342,
+          "pbs_mse": 0.0047379,
+          "flex_mse": 1.6e-06,
+          "ours_mse": 0.0216866,
+          "gain_vs_pbs": 87.8,
+          "ours_decision": "[structural](strategy=GlobalSinkWindow, sink_blocks=2, window_blocks=6, stride_blocks=2, active_frac=0.59) \u2014 Structural(O(1)): est 0.93 ms (sel=0.005 ms, kernel\u22480.92 ms) | all candidates: structural=0.93ms, knorm=1.46ms, pbs=3.47ms"
+        },
+        "lm_sink_local": {
+          "sparsity": 0.4762,
+          "pbs_ms": 3.4253,
+          "flex_ms": 6.2887,
+          "ours_ms": 3.2177,
+          "pbs_mse": 1.77e-05,
+          "flex_mse": 0.0002444,
+          "ours_mse": 3.57e-05,
+          "gain_vs_pbs": 6.06,
+          "ours_decision": "[pbs](threshold=0.86, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 3.47 ms (sel=2.19 ms, kernel\u22480.78 ms); adaptive thr=0.86, seg=256; Flex skipped (L=8192 < flex_min=65536) | all candidates: pbs=3.47ms"
+        },
+        "lm_sparse_global": {
+          "sparsity": 0.3884,
+          "pbs_ms": 3.3993,
+          "flex_ms": 13.4796,
+          "ours_ms": 0.4389,
+          "pbs_mse": 0.0,
+          "flex_mse": 0.0001072,
+          "ours_mse": 0.0783541,
+          "gain_vs_pbs": 87.09,
+          "ours_decision": "[structural](strategy=GlobalSinkWindow, sink_blocks=2, window_blocks=6, stride_blocks=2, active_frac=0.67) \u2014 Structural(O(1)): est 1.06 ms (sel=0.005 ms, kernel\u22481.06 ms) | all candidates: structural=1.06ms, knorm=1.57ms, pbs=3.51ms"
+        },
+        "lm_hierarchical": {
+          "sparsity": 0.2672,
+          "pbs_ms": 3.639,
+          "flex_ms": 7.1663,
+          "ours_ms": 3.5622,
+          "pbs_mse": 0.0002611,
+          "flex_mse": 1.81e-05,
+          "ours_mse": 0.0002611,
+          "gain_vs_pbs": 2.11,
+          "ours_decision": "[pbs](threshold=0.9, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 3.56 ms (sel=2.19 ms, kernel\u22481.10 ms); adaptive thr=0.9, seg=256; Flex skipped (L=8192 < flex_min=65536) | all candidates: pbs=3.56ms"
+        },
+        "lm_local_periodic": {
+          "sparsity": 0.4204,
+          "pbs_ms": 3.4953,
+          "flex_ms": 6.6099,
+          "ours_ms": 3.4068,
+          "pbs_mse": 3.43e-05,
+          "flex_mse": 0.0001289,
+          "ours_mse": 4.04e-05,
+          "gain_vs_pbs": 2.53,
+          "ours_decision": "[pbs](threshold=0.89, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 3.49 ms (sel=2.19 ms, kernel\u22480.87 ms); adaptive thr=0.89, seg=256; Flex skipped (L=8192 < flex_min=65536) | all candidates: pbs=3.49ms"
+        },
+        "lm_mixed": {
+          "sparsity": 0.4807,
+          "pbs_ms": 3.3744,
+          "flex_ms": 5.8146,
+          "ours_ms": 3.1519,
+          "pbs_mse": 1.84e-05,
+          "flex_mse": 0.0009132,
+          "ours_mse": 3.63e-05,
+          "gain_vs_pbs": 6.59,
+          "ours_decision": "[pbs](threshold=0.86, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 3.47 ms (sel=2.19 ms, kernel\u22480.78 ms); adaptive thr=0.86, seg=256; Flex skipped (L=8192 < flex_min=65536) | all candidates: pbs=3.47ms"
+        }
+      }
+    },
+    {
+      "seq_len": 16384,
+      "n": 8,
+      "sparsity_avg": 0.484,
+      "flash_ms_avg": 5.6444,
+      "pbs_fixed_t_ms": 10.9793,
+      "pbs_fixed_sel_ms": 4.1609,
+      "pbs_fixed_ker_ms": 6.8184,
+      "pbs_fixed_mse": 0.0006,
+      "pbs_fixed_kl": 0.0003,
+      "ours_t_ms": 6.8618,
+      "ours_sel_ms": 2.3962,
+      "ours_ker_ms": 4.4656,
+      "ours_mse": 0.0084,
+      "ours_kl": 0.0003,
+      "flex_fixed_t_ms": 17.2612,
+      "flex_fixed_mse": 0.0001,
+      "flex_fixed_kl": 0.0,
+      "gain_pct_vs_pbs": 37.5,
+      "gain_pct_vs_flex": 60.25,
+      "gain_pct": 37.5,
+      "by_scenario": {
+        "sparse_low": {
+          "sparsity": 0.3694,
+          "pbs_ms": 11.1841,
+          "flex_ms": 22.3877,
+          "ours_ms": 11.1991,
+          "pbs_mse": 1.97e-05,
+          "flex_mse": 0.0002613,
+          "ours_mse": 1.97e-05,
+          "gain_vs_pbs": -0.13,
+          "ours_decision": "[pbs](threshold=0.9, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 9.69 ms (sel=4.37 ms, kernel\u22483.77 ms); adaptive thr=0.9, seg=256; Flex skipped (L=16384 < flex_min=65536) | all candidates: pbs=9.69ms"
+        },
+        "sparse_med": {
+          "sparsity": 0.4601,
+          "pbs_ms": 11.4087,
+          "flex_ms": 16.5062,
+          "ours_ms": 1.1158,
+          "pbs_mse": 9.34e-05,
+          "flex_mse": 9e-07,
+          "ours_mse": 0.0033776,
+          "gain_vs_pbs": 90.22,
+          "ours_decision": "[structural](strategy=DecayedWindowSink, sink_blocks=2, window_blocks=13, stride_blocks=4, active_frac=0.59) \u2014 Structural(O(1)): est 3.75 ms (sel=0.005 ms, kernel\u22483.74 ms) | all candidates: structural=3.75ms, knorm=4.09ms, pbs=9.53ms"
+        },
+        "sparse_high": {
+          "sparsity": 0.6305,
+          "pbs_ms": 11.4313,
+          "flex_ms": 16.6492,
+          "ours_ms": 1.1053,
+          "pbs_mse": 0.004139,
+          "flex_mse": 1.7e-06,
+          "ours_mse": 0.0252298,
+          "gain_vs_pbs": 90.33,
+          "ours_decision": "[structural](strategy=DecayedWindowSink, sink_blocks=2, window_blocks=13, stride_blocks=4, active_frac=0.41) \u2014 Structural(O(1)): est 2.57 ms (sel=0.005 ms, kernel\u22482.56 ms) | all candidates: structural=2.57ms, knorm=3.14ms, pbs=9.22ms"
+        },
+        "lm_sink_local": {
+          "sparsity": 0.5405,
+          "pbs_ms": 10.4912,
+          "flex_ms": 14.2302,
+          "ours_ms": 9.4682,
+          "pbs_mse": 2.29e-05,
+          "flex_mse": 0.0001352,
+          "ours_mse": 6.93e-05,
+          "gain_vs_pbs": 9.75,
+          "ours_decision": "[pbs](threshold=0.83, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 9.39 ms (sel=4.37 ms, kernel\u22482.75 ms); adaptive thr=0.83, seg=256; Flex skipped (L=16384 < flex_min=65536) | all candidates: pbs=9.39ms"
+        },
+        "lm_sparse_global": {
+          "sparsity": 0.463,
+          "pbs_ms": 10.5226,
+          "flex_ms": 22.3304,
+          "ours_ms": 1.1049,
+          "pbs_mse": 0.0,
+          "flex_mse": 5.94e-05,
+          "ours_mse": 0.0382914,
+          "gain_vs_pbs": 89.5,
+          "ours_decision": "[structural](strategy=DecayedWindowSink, sink_blocks=2, window_blocks=13, stride_blocks=4, active_frac=0.59) \u2014 Structural(O(1)): est 3.73 ms (sel=0.005 ms, kernel\u22483.72 ms) | all candidates: structural=3.73ms, knorm=4.08ms, pbs=9.52ms"
+        },
+        "lm_hierarchical": {
+          "sparsity": 0.3598,
+          "pbs_ms": 11.4234,
+          "flex_ms": 16.5103,
+          "ours_ms": 11.39,
+          "pbs_mse": 0.0003348,
+          "flex_mse": 9.9e-06,
+          "ours_mse": 0.0003348,
+          "gain_vs_pbs": 0.29,
+          "ours_decision": "[pbs](threshold=0.9, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 9.71 ms (sel=4.37 ms, kernel\u22483.83 ms); adaptive thr=0.9, seg=256; Flex skipped (L=16384 < flex_min=65536) | all candidates: pbs=9.71ms"
+        },
+        "lm_local_periodic": {
+          "sparsity": 0.5018,
+          "pbs_ms": 10.9503,
+          "flex_ms": 15.5133,
+          "ours_ms": 10.2929,
+          "pbs_mse": 4.27e-05,
+          "flex_mse": 5.04e-05,
+          "ours_mse": 9.97e-05,
+          "gain_vs_pbs": 6.0,
+          "ours_decision": "[pbs](threshold=0.85, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 9.45 ms (sel=4.37 ms, kernel\u22482.98 ms); adaptive thr=0.85, seg=256; Flex skipped (L=16384 < flex_min=65536) | all candidates: pbs=9.45ms"
+        },
+        "lm_mixed": {
+          "sparsity": 0.5471,
+          "pbs_ms": 10.423,
+          "flex_ms": 13.9622,
+          "ours_ms": 9.218,
+          "pbs_mse": 2.41e-05,
+          "flex_mse": 0.0001789,
+          "ours_mse": 7.27e-05,
+          "gain_vs_pbs": 11.56,
+          "ours_decision": "[pbs](threshold=0.83, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 9.37 ms (sel=4.37 ms, kernel\u22482.71 ms); adaptive thr=0.83, seg=256; Flex skipped (L=16384 < flex_min=65536) | all candidates: pbs=9.37ms"
+        }
+      }
+    },
+    {
+      "seq_len": 32768,
+      "n": 8,
+      "sparsity_avg": 0.5656,
+      "flash_ms_avg": 24.2296,
+      "pbs_fixed_t_ms": 39.2349,
+      "pbs_fixed_sel_ms": 6.6921,
+      "pbs_fixed_ker_ms": 32.5429,
+      "pbs_fixed_mse": 0.0004,
+      "pbs_fixed_kl": 0.0002,
+      "ours_t_ms": 25.0398,
+      "ours_sel_ms": 4.6833,
+      "ours_ker_ms": 20.3564,
+      "ours_mse": 0.0028,
+      "ours_kl": 0.0002,
+      "flex_fixed_t_ms": 53.0225,
+      "flex_fixed_mse": 0.0001,
+      "flex_fixed_kl": 0.0,
+      "gain_pct_vs_pbs": 36.18,
+      "gain_pct_vs_flex": 52.78,
+      "gain_pct": 36.18,
+      "by_scenario": {
+        "sparse_low": {
+          "sparsity": 0.4961,
+          "pbs_ms": 40.9368,
+          "flex_ms": 55.7698,
+          "ours_ms": 38.6062,
+          "pbs_mse": 1.27e-05,
+          "flex_mse": 0.0002825,
+          "ours_mse": 2.06e-05,
+          "gain_vs_pbs": 5.69,
+          "ours_decision": "[pbs](threshold=0.85, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 29.12 ms (sel=8.74 ms, kernel\u224812.07 ms); adaptive thr=0.85, seg=256; Flex skipped (L=32768 < flex_min=65536) | all candidates: pbs=29.12ms"
+        },
+        "sparse_med": {
+          "sparsity": 0.5521,
+          "pbs_ms": 40.8228,
+          "flex_ms": 54.6359,
+          "ours_ms": 7.6728,
+          "pbs_mse": 6e-05,
+          "flex_mse": 3e-07,
+          "ours_mse": 0.0014385,
+          "gain_vs_pbs": 81.2,
+          "ours_decision": "[knorm](strategy=HierarchicalKNorm, active_frac=0.41) \u2014 HierarchicalKNorm(O(L\u00b7D)): est 11.82 ms (sel=1.746 ms, kernel\u224810.39 ms) | all candidates: knorm=11.82ms, structural=12.42ms, pbs=28.72ms"
+        },
+        "sparse_high": {
+          "sparsity": 0.6584,
+          "pbs_ms": 40.9996,
+          "flex_ms": 54.5085,
+          "ours_ms": 9.067,
+          "pbs_mse": 0.003041,
+          "flex_mse": 1.1e-06,
+          "ours_mse": 0.0120681,
+          "gain_vs_pbs": 77.89,
+          "ours_decision": "[knorm](strategy=HierarchicalKNorm, active_frac=0.31) \u2014 HierarchicalKNorm(O(L\u00b7D)): est 9.43 ms (sel=1.746 ms, kernel\u22487.92 ms) | all candidates: knorm=9.43ms, structural=9.48ms, pbs=27.95ms"
+        },
+        "lm_sink_local": {
+          "sparsity": 0.5929,
+          "pbs_ms": 37.5047,
+          "flex_ms": 49.5217,
+          "ours_ms": 31.8061,
+          "pbs_mse": 2.62e-05,
+          "flex_mse": 3.5e-05,
+          "ours_mse": 0.0001128,
+          "gain_vs_pbs": 15.19,
+          "ours_decision": "[pbs](threshold=0.8, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 28.43 ms (sel=8.74 ms, kernel\u22489.75 ms); adaptive thr=0.8, seg=256; Flex skipped (L=32768 < flex_min=65536) | all candidates: pbs=28.43ms"
+        },
+        "lm_sparse_global": {
+          "sparsity": 0.5748,
+          "pbs_ms": 36.908,
+          "flex_ms": 55.3824,
+          "ours_ms": 8.0006,
+          "pbs_mse": 0.0,
+          "flex_mse": 3.15e-05,
+          "ours_mse": 0.0075056,
+          "gain_vs_pbs": 78.32,
+          "ours_decision": "[knorm](strategy=HierarchicalKNorm, active_frac=0.39) \u2014 HierarchicalKNorm(O(L\u00b7D)): est 11.31 ms (sel=1.746 ms, kernel\u22489.86 ms) | all candidates: knorm=11.31ms, structural=11.79ms, pbs=28.56ms"
+        },
+        "lm_hierarchical": {
+          "sparsity": 0.4861,
+          "pbs_ms": 40.9754,
+          "flex_ms": 54.3242,
+          "ours_ms": 39.3127,
+          "pbs_mse": 0.0003285,
+          "flex_mse": 4.6e-06,
+          "ours_mse": 0.0006983,
+          "gain_vs_pbs": 4.06,
+          "ours_decision": "[pbs](threshold=0.86, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 29.19 ms (sel=8.74 ms, kernel\u224812.31 ms); adaptive thr=0.86, seg=256; Flex skipped (L=32768 < flex_min=65536) | all candidates: pbs=29.19ms"
+        },
+        "lm_local_periodic": {
+          "sparsity": 0.5651,
+          "pbs_ms": 39.0772,
+          "flex_ms": 52.0755,
+          "ours_ms": 35.1546,
+          "pbs_mse": 4.99e-05,
+          "flex_mse": 1.94e-05,
+          "ours_mse": 0.0001716,
+          "gain_vs_pbs": 10.04,
+          "ours_decision": "[pbs](threshold=0.82, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 28.63 ms (sel=8.74 ms, kernel\u224810.41 ms); adaptive thr=0.82, seg=256; Flex skipped (L=32768 < flex_min=65536) | all candidates: pbs=28.63ms"
+        },
+        "lm_mixed": {
+          "sparsity": 0.5993,
+          "pbs_ms": 36.6551,
+          "flex_ms": 47.9618,
+          "ours_ms": 30.6982,
+          "pbs_mse": 2.91e-05,
+          "flex_mse": 7.05e-05,
+          "ours_mse": 0.0001267,
+          "gain_vs_pbs": 16.25,
+          "ours_decision": "[pbs](threshold=0.8, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 28.38 ms (sel=8.74 ms, kernel\u22489.59 ms); adaptive thr=0.8, seg=256; Flex skipped (L=32768 < flex_min=65536) | all candidates: pbs=28.38ms"
+        }
+      }
+    },
+    {
+      "seq_len": 65536,
+      "n": 8,
+      "sparsity_avg": 0.5962,
+      "flash_ms_avg": 97.1047,
+      "pbs_fixed_t_ms": 149.6747,
+      "pbs_fixed_sel_ms": 13.5922,
+      "pbs_fixed_ker_ms": 136.0824,
+      "pbs_fixed_mse": 0.0003,
+      "pbs_fixed_kl": 0.0002,
+      "ours_t_ms": 88.2795,
+      "ours_sel_ms": 23.338,
+      "ours_ker_ms": 64.9415,
+      "ours_mse": 0.0034,
+      "ours_kl": 0.0002,
+      "flex_fixed_t_ms": 194.2396,
+      "flex_fixed_mse": 0.0,
+      "flex_fixed_kl": 0.0,
+      "gain_pct_vs_pbs": 41.02,
+      "gain_pct_vs_flex": 54.55,
+      "gain_pct": 41.02,
+      "by_scenario": {
+        "sparse_low": {
+          "sparsity": 0.5242,
+          "pbs_ms": 154.7503,
+          "flex_ms": 188.2938,
+          "ours_ms": 149.1132,
+          "pbs_mse": 8.2e-06,
+          "flex_mse": 0.0002531,
+          "ours_mse": 1.33e-05,
+          "gain_vs_pbs": 3.64,
+          "ours_decision": "[pbs](threshold=0.84, segment_size=512, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 98.19 ms (sel=17.48 ms, kernel\u224845.57 ms); adaptive thr=0.84, seg=512 | all candidates: pbs=98.19ms, flex=102.74ms"
+        },
+        "sparse_med": {
+          "sparsity": 0.5879,
+          "pbs_ms": 157.2731,
+          "flex_ms": 203.2602,
+          "ours_ms": 29.8615,
+          "pbs_mse": 4.04e-05,
+          "flex_mse": 2e-07,
+          "ours_mse": 0.0004543,
+          "gain_vs_pbs": 81.01,
+          "ours_decision": "[knorm](strategy=HierarchicalKNorm, active_frac=0.38) \u2014 HierarchicalKNorm(O(L\u00b7D)): est 40.20 ms (sel=3.123 ms, kernel\u224838.23 ms) | all candidates: knorm=40.20ms, structural=45.71ms, pbs=96.37ms, flex=98.03ms"
+        },
+        "sparse_high": {
+          "sparsity": 0.6787,
+          "pbs_ms": 157.1673,
+          "flex_ms": 201.9543,
+          "ours_ms": 28.7486,
+          "pbs_mse": 0.0021636,
+          "flex_mse": 7e-07,
+          "ours_mse": 0.0100494,
+          "gain_vs_pbs": 81.71,
+          "ours_decision": "[knorm](strategy=HierarchicalKNorm, active_frac=0.3) \u2014 HierarchicalKNorm(O(L\u00b7D)): est 32.03 ms (sel=3.123 ms, kernel\u224829.80 ms) | all candidates: knorm=32.03ms, structural=35.64ms, flex=91.31ms, pbs=93.76ms"
+        },
+        "lm_sink_local": {
+          "sparsity": 0.6259,
+          "pbs_ms": 141.911,
+          "flex_ms": 189.5578,
+          "ours_ms": 95.215,
+          "pbs_mse": 2.71e-05,
+          "flex_mse": 1.22e-05,
+          "ours_mse": null,
+          "gain_vs_pbs": 32.91,
+          "ours_decision": "[flex](gamma=0.8, tau=0.2, min_budget_frac=0.0, block_size=128) \u2014 Flex(O(r\u00b7L\u00b7D)): est 95.21 ms (sel=67.54 ms) | all candidates: flex=95.21ms, pbs=95.27ms"
+        },
+        "lm_sparse_global": {
+          "sparsity": 0.6088,
+          "pbs_ms": 140.2699,
+          "flex_ms": 187.1148,
+          "ours_ms": 29.7525,
+          "pbs_mse": 0.0,
+          "flex_mse": 1.47e-05,
+          "ours_mse": 0.0091664,
+          "gain_vs_pbs": 78.79,
+          "ours_decision": "[knorm](strategy=HierarchicalKNorm, active_frac=0.36) \u2014 HierarchicalKNorm(O(L\u00b7D)): est 38.32 ms (sel=3.123 ms, kernel\u224836.29 ms) | all candidates: knorm=38.32ms, structural=43.39ms, pbs=95.77ms, flex=96.48ms"
+        },
+        "lm_hierarchical": {
+          "sparsity": 0.5115,
+          "pbs_ms": 156.9096,
+          "flex_ms": 203.4019,
+          "ours_ms": 147.7827,
+          "pbs_mse": 0.0002614,
+          "flex_mse": 2.1e-06,
+          "ours_mse": 0.0007269,
+          "gain_vs_pbs": 5.82,
+          "ours_decision": "[pbs](threshold=0.84, segment_size=512, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 98.56 ms (sel=17.48 ms, kernel\u224846.78 ms); adaptive thr=0.84, seg=512 | all candidates: pbs=98.56ms, flex=103.68ms"
+        },
+        "lm_local_periodic": {
+          "sparsity": 0.6013,
+          "pbs_ms": 149.235,
+          "flex_ms": 196.1127,
+          "ours_ms": 130.9297,
+          "pbs_mse": 5.33e-05,
+          "flex_mse": 8.5e-06,
+          "ours_mse": 0.0002144,
+          "gain_vs_pbs": 12.27,
+          "ours_decision": "[pbs](threshold=0.8, segment_size=512, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 95.98 ms (sel=17.48 ms, kernel\u224838.19 ms); adaptive thr=0.8, seg=512 | all candidates: pbs=95.98ms, flex=97.04ms"
+        },
+        "lm_mixed": {
+          "sparsity": 0.6311,
+          "pbs_ms": 139.8811,
+          "flex_ms": 184.221,
+          "ours_ms": 94.833,
+          "pbs_mse": 3.26e-05,
+          "flex_mse": 3.51e-05,
+          "ours_mse": null,
+          "gain_vs_pbs": 32.2,
+          "ours_decision": "[flex](gamma=0.8, tau=0.2, min_budget_frac=0.0, block_size=128) \u2014 Flex(O(r\u00b7L\u00b7D)): est 94.83 ms (sel=67.54 ms) | all candidates: flex=94.83ms, pbs=95.12ms"
+        }
+      }
+    },
+    {
+      "seq_len": 131072,
+      "n": 8,
+      "sparsity_avg": 0.62,
+      "flash_ms_avg": 406.5559,
+      "pbs_fixed_t_ms": 612.5202,
+      "pbs_fixed_sel_ms": 28.7198,
+      "pbs_fixed_ker_ms": 583.8004,
+      "pbs_fixed_mse": 0.0002,
+      "pbs_fixed_kl": 0.0001,
+      "ours_t_ms": 167.1598,
+      "ours_sel_ms": 85.3394,
+      "ours_ker_ms": 81.8204,
+      "ours_mse": 0.0042,
+      "ours_kl": 0.0002,
+      "flex_fixed_t_ms": 757.8364,
+      "flex_fixed_mse": 0.0,
+      "flex_fixed_kl": 0.0,
+      "gain_pct_vs_pbs": 72.71,
+      "gain_pct_vs_flex": 77.94,
+      "gain_pct": 72.71,
+      "by_scenario": {
+        "sparse_low": {
+          "sparsity": 0.5544,
+          "pbs_ms": 634.0925,
+          "flex_ms": 722.1658,
+          "ours_ms": 213.942,
+          "pbs_mse": 4.8e-06,
+          "flex_mse": 0.0002594,
+          "ours_mse": null,
+          "gain_vs_pbs": 66.26,
+          "ours_decision": "[flex](gamma=0.9, tau=0.2, min_budget_frac=0.0, block_size=128) \u2014 Flex(O(r\u00b7L\u00b7D)): est 213.94 ms (sel=133.07 ms) | all candidates: flex=213.94ms, pbs=354.35ms"
+        },
+        "sparse_med": {
+          "sparsity": 0.6144,
+          "pbs_ms": 632.5644,
+          "flex_ms": 791.6988,
+          "ours_ms": 102.9832,
+          "pbs_mse": 2.28e-05,
+          "flex_mse": 1e-07,
+          "ours_mse": 0.0004885,
+          "gain_vs_pbs": 83.72,
+          "ours_decision": "[knorm](strategy=HierarchicalKNorm, active_frac=0.35) \u2014 HierarchicalKNorm(O(L\u00b7D)): est 144.65 ms (sel=5.875 ms, kernel\u2248143.07 ms) | all candidates: knorm=144.65ms, structural=171.07ms, flex=203.05ms, pbs=347.45ms"
+        },
+        "sparse_high": {
+          "sparsity": 0.7036,
+          "pbs_ms": 631.6957,
+          "flex_ms": 786.787,
+          "ours_ms": 103.2329,
+          "pbs_mse": 0.0014035,
+          "flex_mse": 3e-07,
+          "ours_mse": 0.0081442,
+          "gain_vs_pbs": 83.66,
+          "ours_decision": "[knorm](strategy=HierarchicalKNorm, active_frac=0.27) \u2014 HierarchicalKNorm(O(L\u00b7D)): est 112.53 ms (sel=5.875 ms, kernel\u2248109.96 ms) | all candidates: knorm=112.53ms, structural=131.47ms, flex=186.85ms, pbs=337.20ms"
+        },
+        "lm_sink_local": {
+          "sparsity": 0.6435,
+          "pbs_ms": 584.6238,
+          "flex_ms": 748.8823,
+          "ours_ms": 197.772,
+          "pbs_mse": 2.53e-05,
+          "flex_mse": 6.7e-06,
+          "ours_mse": null,
+          "gain_vs_pbs": 66.17,
+          "ours_decision": "[flex](gamma=0.8, tau=0.2, min_budget_frac=0.0, block_size=128) \u2014 Flex(O(r\u00b7L\u00b7D)): est 197.77 ms (sel=133.07 ms) | all candidates: flex=197.77ms, pbs=344.11ms"
+        },
+        "lm_sparse_global": {
+          "sparsity": 0.6321,
+          "pbs_ms": 604.2908,
+          "flex_ms": 710.7451,
+          "ours_ms": 104.5841,
+          "pbs_mse": 0.0,
+          "flex_mse": 7.5e-06,
+          "ours_mse": 0.0039017,
+          "gain_vs_pbs": 82.69,
+          "ours_decision": "[knorm](strategy=HierarchicalKNorm, active_frac=0.34) \u2014 HierarchicalKNorm(O(L\u00b7D)): est 138.28 ms (sel=5.875 ms, kernel\u2248136.50 ms) | all candidates: knorm=138.28ms, structural=163.21ms, flex=199.84ms, pbs=345.42ms"
+        },
+        "lm_hierarchical": {
+          "sparsity": 0.5426,
+          "pbs_ms": 631.9865,
+          "flex_ms": 790.5096,
+          "ours_ms": 216.072,
+          "pbs_mse": 0.0001788,
+          "flex_mse": 1e-06,
+          "ours_mse": null,
+          "gain_vs_pbs": 65.81,
+          "ours_decision": "[flex](gamma=0.9, tau=0.2, min_budget_frac=0.0, block_size=128) \u2014 Flex(O(r\u00b7L\u00b7D)): est 216.07 ms (sel=133.07 ms) | all candidates: flex=216.07ms, pbs=355.70ms"
+        },
+        "lm_local_periodic": {
+          "sparsity": 0.6204,
+          "pbs_ms": 606.0411,
+          "flex_ms": 768.6454,
+          "ours_ms": 201.959,
+          "pbs_mse": 5.1e-05,
+          "flex_mse": 5e-06,
+          "ours_mse": null,
+          "gain_vs_pbs": 66.68,
+          "ours_decision": "[flex](gamma=0.8, tau=0.2, min_budget_frac=0.0, block_size=128) \u2014 Flex(O(r\u00b7L\u00b7D)): est 201.96 ms (sel=133.07 ms) | all candidates: flex=201.96ms, pbs=346.76ms"
+        },
+        "lm_mixed": {
+          "sparsity": 0.6492,
+          "pbs_ms": 574.8671,
+          "flex_ms": 743.2574,
+          "ours_ms": 196.733,
+          "pbs_mse": 3.28e-05,
+          "flex_mse": 1.44e-05,
+          "ours_mse": null,
+          "gain_vs_pbs": 65.78,
+          "ours_decision": "[flex](gamma=0.8, tau=0.2, min_budget_frac=0.0, block_size=128) \u2014 Flex(O(r\u00b7L\u00b7D)): est 196.73 ms (sel=133.07 ms) | all candidates: flex=196.73ms, pbs=343.45ms"
+        }
+      }
+    }
+  ],
+  "cells": [
+    {
+      "scenario": "sparse_low",
+      "seq_len": 4096,
+      "sparsity": 0.285,
+      "flash_ms": 0.5014,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 1.8432,
+          "t_select_ms": 1.1479,
+          "t_kernel_ms": 0.6953,
+          "mse": 3.11e-05,
+          "kl": 1.54e-05,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 10.0413,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 10.0413,
+          "mse": 0.0002052,
+          "kl": 0.000102,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 1.6971,
+          "t_select_ms": 1.1711,
+          "t_kernel_ms": 0.526,
+          "mse": 3.11e-05,
+          "kl": 1.54e-05,
+          "passed": true,
+          "backend": "pbs",
+          "params": {
+            "threshold": 0.9,
+            "segment_size": 256,
+            "block_size": 128,
+            "use_triton": true,
+            "force_first": true
+          },
+          "reason": "PBS: est 1.43 ms (sel=1.09 ms, kernel\u22480.27 ms); adaptive thr=0.9, seg=256; Flex skipped (L=4096 < flex_min=65536) | all candidates: pbs=1.43ms",
+          "active_fraction": 1.0
+        }
+      },
+      "gain_vs_pbs_pct": 7.93,
+      "ours_decision": "[pbs](threshold=0.9, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 1.43 ms (sel=1.09 ms, kernel\u22480.27 ms); adaptive thr=0.9, seg=256; Flex skipped (L=4096 < flex_min=65536) | all candidates: pbs=1.43ms"
+    },
+    {
+      "scenario": "sparse_low",
+      "seq_len": 8192,
+      "sparsity": 0.2792,
+      "flash_ms": 1.5712,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 3.6352,
+          "t_select_ms": 1.735,
+          "t_kernel_ms": 1.9002,
+          "mse": 2.76e-05,
+          "kl": 1.37e-05,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 13.5837,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 13.5837,
+          "mse": 0.0002996,
+          "kl": 0.0001488,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 3.5632,
+          "t_select_ms": 1.7381,
+          "t_kernel_ms": 1.8251,
+          "mse": 2.76e-05,
+          "kl": 1.37e-05,
+          "passed": true,
+          "backend": "pbs",
+          "params": {
+            "threshold": 0.9,
+            "segment_size": 256,
+            "block_size": 128,
+            "use_triton": true,
+            "force_first": true
+          },
+          "reason": "PBS: est 3.56 ms (sel=2.19 ms, kernel\u22481.08 ms); adaptive thr=0.9, seg=256; Flex skipped (L=8192 < flex_min=65536) | all candidates: pbs=3.56ms",
+          "active_fraction": 1.0
+        }
+      },
+      "gain_vs_pbs_pct": 1.98,
+      "ours_decision": "[pbs](threshold=0.9, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 3.56 ms (sel=2.19 ms, kernel\u22481.08 ms); adaptive thr=0.9, seg=256; Flex skipped (L=8192 < flex_min=65536) | all candidates: pbs=3.56ms"
+    },
+    {
+      "scenario": "sparse_low",
+      "seq_len": 16384,
+      "sparsity": 0.3694,
+      "flash_ms": 5.6972,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 11.1841,
+          "t_select_ms": 4.026,
+          "t_kernel_ms": 7.1581,
+          "mse": 1.97e-05,
+          "kl": 9.8e-06,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 22.3877,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 22.3877,
+          "mse": 0.0002613,
+          "kl": 0.0001299,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 11.1991,
+          "t_select_ms": 3.6809,
+          "t_kernel_ms": 7.5182,
+          "mse": 1.97e-05,
+          "kl": 9.8e-06,
+          "passed": true,
+          "backend": "pbs",
+          "params": {
+            "threshold": 0.9,
+            "segment_size": 256,
+            "block_size": 128,
+            "use_triton": true,
+            "force_first": true
+          },
+          "reason": "PBS: est 9.69 ms (sel=4.37 ms, kernel\u22483.77 ms); adaptive thr=0.9, seg=256; Flex skipped (L=16384 < flex_min=65536) | all candidates: pbs=9.69ms",
+          "active_fraction": 1.0
+        }
+      },
+      "gain_vs_pbs_pct": -0.13,
+      "ours_decision": "[pbs](threshold=0.9, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 9.69 ms (sel=4.37 ms, kernel\u22483.77 ms); adaptive thr=0.9, seg=256; Flex skipped (L=16384 < flex_min=65536) | all candidates: pbs=9.69ms"
+    },
+    {
+      "scenario": "sparse_low",
+      "seq_len": 32768,
+      "sparsity": 0.4961,
+      "flash_ms": 23.9978,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 40.9368,
+          "t_select_ms": 6.642,
+          "t_kernel_ms": 34.2948,
+          "mse": 1.27e-05,
+          "kl": 6.3e-06,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 55.7698,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 55.7698,
+          "mse": 0.0002825,
+          "kl": 0.0001405,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 38.6062,
+          "t_select_ms": 6.7615,
+          "t_kernel_ms": 31.8447,
+          "mse": 2.06e-05,
+          "kl": 1.02e-05,
+          "passed": true,
+          "backend": "pbs",
+          "params": {
+            "threshold": 0.85,
+            "segment_size": 256,
+            "block_size": 128,
+            "use_triton": true,
+            "force_first": true
+          },
+          "reason": "PBS: est 29.12 ms (sel=8.74 ms, kernel\u224812.07 ms); adaptive thr=0.85, seg=256; Flex skipped (L=32768 < flex_min=65536) | all candidates: pbs=29.12ms",
+          "active_fraction": 1.0
+        }
+      },
+      "gain_vs_pbs_pct": 5.69,
+      "ours_decision": "[pbs](threshold=0.85, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 29.12 ms (sel=8.74 ms, kernel\u224812.07 ms); adaptive thr=0.85, seg=256; Flex skipped (L=32768 < flex_min=65536) | all candidates: pbs=29.12ms"
+    },
+    {
+      "scenario": "sparse_low",
+      "seq_len": 65536,
+      "sparsity": 0.5242,
+      "flash_ms": 95.8898,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 154.7503,
+          "t_select_ms": 13.5042,
+          "t_kernel_ms": 141.2461,
+          "mse": 8.2e-06,
+          "kl": 4.1e-06,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 188.2938,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 188.2938,
+          "mse": 0.0002531,
+          "kl": 0.0001254,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 149.1132,
+          "t_select_ms": 16.7267,
+          "t_kernel_ms": 132.3865,
+          "mse": 1.33e-05,
+          "kl": 6.6e-06,
+          "passed": true,
+          "backend": "pbs",
+          "params": {
+            "threshold": 0.84,
+            "segment_size": 512,
+            "block_size": 128,
+            "use_triton": true,
+            "force_first": true
+          },
+          "reason": "PBS: est 98.19 ms (sel=17.48 ms, kernel\u224845.57 ms); adaptive thr=0.84, seg=512 | all candidates: pbs=98.19ms, flex=102.74ms",
+          "active_fraction": 1.0
+        }
+      },
+      "gain_vs_pbs_pct": 3.64,
+      "ours_decision": "[pbs](threshold=0.84, segment_size=512, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 98.19 ms (sel=17.48 ms, kernel\u224845.57 ms); adaptive thr=0.84, seg=512 | all candidates: pbs=98.19ms, flex=102.74ms"
+    },
+    {
+      "scenario": "sparse_low",
+      "seq_len": 131072,
+      "sparsity": 0.5544,
+      "flash_ms": 407.4353,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 634.0925,
+          "t_select_ms": 26.6602,
+          "t_kernel_ms": 607.4324,
+          "mse": 4.8e-06,
+          "kl": 2.4e-06,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 722.1658,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 722.1658,
+          "mse": 0.0002594,
+          "kl": 0.0001291,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "strategy": "ours_flex",
+          "t_total_ms": 213.942,
+          "t_select_ms": 133.072,
+          "t_kernel_ms": 80.87,
+          "mse": null,
+          "kl": null,
+          "passed": null,
+          "is_theory": true,
+          "backend": "flex",
+          "params": {
+            "gamma": 0.9,
+            "tau": 0.2,
+            "min_budget_frac": 0.0,
+            "block_size": 128
+          },
+          "reason": "Flex(O(r\u00b7L\u00b7D)): est 213.94 ms (sel=133.07 ms) | all candidates: flex=213.94ms, pbs=354.35ms"
+        }
+      },
+      "gain_vs_pbs_pct": 66.26,
+      "ours_decision": "[flex](gamma=0.9, tau=0.2, min_budget_frac=0.0, block_size=128) \u2014 Flex(O(r\u00b7L\u00b7D)): est 213.94 ms (sel=133.07 ms) | all candidates: flex=213.94ms, pbs=354.35ms"
+    },
+    {
+      "scenario": "sparse_med",
+      "seq_len": 4096,
+      "sparsity": 0.344,
+      "flash_ms": 0.4854,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 2.1446,
+          "t_select_ms": 1.1711,
+          "t_kernel_ms": 0.9735,
+          "mse": 0.00014,
+          "kl": 6.95e-05,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 4.7527,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 4.7527,
+          "mse": 8.77e-05,
+          "kl": 4.36e-05,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 0.3071,
+          "t_select_ms": 0.0651,
+          "t_kernel_ms": 0.242,
+          "mse": 0.0048705,
+          "kl": 0.0001578,
+          "passed": true,
+          "backend": "structural",
+          "params": {
+            "strategy": "GlobalSinkWindow",
+            "sink_blocks": 2,
+            "window_blocks": 4,
+            "stride_blocks": 2,
+            "active_frac": 0.7
+          },
+          "reason": "Structural(O(1)): est 0.28 ms (sel=0.005 ms, kernel\u22480.28 ms) | all candidates: structural=0.28ms, knorm=0.77ms, pbs=1.43ms",
+          "active_fraction": 0.1875,
+          "is_theory_kernel": false
+        }
+      },
+      "gain_vs_pbs_pct": 85.68,
+      "ours_decision": "[structural](strategy=GlobalSinkWindow, sink_blocks=2, window_blocks=4, stride_blocks=2, active_frac=0.7) \u2014 Structural(O(1)): est 0.28 ms (sel=0.005 ms, kernel\u22480.28 ms) | all candidates: structural=0.28ms, knorm=0.77ms, pbs=1.43ms"
+    },
+    {
+      "scenario": "sparse_med",
+      "seq_len": 8192,
+      "sparsity": 0.3422,
+      "flash_ms": 1.5964,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 3.6181,
+          "t_select_ms": 1.6968,
+          "t_kernel_ms": 1.9214,
+          "mse": 0.00013,
+          "kl": 6.45e-05,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 7.4711,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 7.4711,
+          "mse": 3.2e-05,
+          "kl": 1.58e-05,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 0.436,
+          "t_select_ms": 0.0578,
+          "t_kernel_ms": 0.3782,
+          "mse": 0.0057609,
+          "kl": 0.0001822,
+          "passed": true,
+          "backend": "structural",
+          "params": {
+            "strategy": "GlobalSinkWindow",
+            "sink_blocks": 2,
+            "window_blocks": 6,
+            "stride_blocks": 2,
+            "active_frac": 0.7
+          },
+          "reason": "Structural(O(1)): est 1.11 ms (sel=0.005 ms, kernel\u22481.10 ms) | all candidates: structural=1.11ms, knorm=1.64ms, pbs=3.53ms",
+          "active_fraction": 0.125,
+          "is_theory_kernel": false
+        }
+      },
+      "gain_vs_pbs_pct": 87.95,
+      "ours_decision": "[structural](strategy=GlobalSinkWindow, sink_blocks=2, window_blocks=6, stride_blocks=2, active_frac=0.7) \u2014 Structural(O(1)): est 1.11 ms (sel=0.005 ms, kernel\u22481.10 ms) | all candidates: structural=1.11ms, knorm=1.64ms, pbs=3.53ms"
+    },
+    {
+      "scenario": "sparse_med",
+      "seq_len": 16384,
+      "sparsity": 0.4601,
+      "flash_ms": 5.6054,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 11.4087,
+          "t_select_ms": 4.3913,
+          "t_kernel_ms": 7.0175,
+          "mse": 9.34e-05,
+          "kl": 4.64e-05,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 16.5062,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 16.5062,
+          "mse": 9e-07,
+          "kl": 5e-07,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 1.1158,
+          "t_select_ms": 0.1239,
+          "t_kernel_ms": 0.9919,
+          "mse": 0.0033776,
+          "kl": 0.0001391,
+          "passed": true,
+          "backend": "structural",
+          "params": {
+            "strategy": "DecayedWindowSink",
+            "sink_blocks": 2,
+            "window_blocks": 13,
+            "stride_blocks": 4,
+            "active_frac": 0.59
+          },
+          "reason": "Structural(O(1)): est 3.75 ms (sel=0.005 ms, kernel\u22483.74 ms) | all candidates: structural=3.75ms, knorm=4.09ms, pbs=9.53ms",
+          "active_fraction": 0.1562,
+          "is_theory_kernel": false
+        }
+      },
+      "gain_vs_pbs_pct": 90.22,
+      "ours_decision": "[structural](strategy=DecayedWindowSink, sink_blocks=2, window_blocks=13, stride_blocks=4, active_frac=0.59) \u2014 Structural(O(1)): est 3.75 ms (sel=0.005 ms, kernel\u22483.74 ms) | all candidates: structural=3.75ms, knorm=4.09ms, pbs=9.53ms"
+    },
+    {
+      "scenario": "sparse_med",
+      "seq_len": 32768,
+      "sparsity": 0.5521,
+      "flash_ms": 24.375,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 40.8228,
+          "t_select_ms": 7.4906,
+          "t_kernel_ms": 33.3322,
+          "mse": 6e-05,
+          "kl": 2.98e-05,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 54.6359,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 54.6359,
+          "mse": 3e-07,
+          "kl": 2e-07,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 7.6728,
+          "t_select_ms": 1.5762,
+          "t_kernel_ms": 6.0966,
+          "mse": 0.0014385,
+          "kl": 6.45e-05,
+          "passed": true,
+          "backend": "knorm",
+          "params": {
+            "strategy": "HierarchicalKNorm",
+            "active_frac": 0.41
+          },
+          "reason": "HierarchicalKNorm(O(L\u00b7D)): est 11.82 ms (sel=1.746 ms, kernel\u224810.39 ms) | all candidates: knorm=11.82ms, structural=12.42ms, pbs=28.72ms",
+          "active_fraction": 0.1875,
+          "is_theory_kernel": false
+        }
+      },
+      "gain_vs_pbs_pct": 81.2,
+      "ours_decision": "[knorm](strategy=HierarchicalKNorm, active_frac=0.41) \u2014 HierarchicalKNorm(O(L\u00b7D)): est 11.82 ms (sel=1.746 ms, kernel\u224810.39 ms) | all candidates: knorm=11.82ms, structural=12.42ms, pbs=28.72ms"
+    },
+    {
+      "scenario": "sparse_med",
+      "seq_len": 65536,
+      "sparsity": 0.5879,
+      "flash_ms": 98.1695,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 157.2731,
+          "t_select_ms": 12.4327,
+          "t_kernel_ms": 144.8404,
+          "mse": 4.04e-05,
+          "kl": 2e-05,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 203.2602,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 203.2602,
+          "mse": 2e-07,
+          "kl": 1e-07,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 29.8615,
+          "t_select_ms": 2.9395,
+          "t_kernel_ms": 26.922,
+          "mse": 0.0004543,
+          "kl": 2.03e-05,
+          "passed": true,
+          "backend": "knorm",
+          "params": {
+            "strategy": "HierarchicalKNorm",
+            "active_frac": 0.38
+          },
+          "reason": "HierarchicalKNorm(O(L\u00b7D)): est 40.20 ms (sel=3.123 ms, kernel\u224838.23 ms) | all candidates: knorm=40.20ms, structural=45.71ms, pbs=96.37ms, flex=98.03ms",
+          "active_fraction": 0.1895,
+          "is_theory_kernel": false
+        }
+      },
+      "gain_vs_pbs_pct": 81.01,
+      "ours_decision": "[knorm](strategy=HierarchicalKNorm, active_frac=0.38) \u2014 HierarchicalKNorm(O(L\u00b7D)): est 40.20 ms (sel=3.123 ms, kernel\u224838.23 ms) | all candidates: knorm=40.20ms, structural=45.71ms, pbs=96.37ms, flex=98.03ms"
+    },
+    {
+      "scenario": "sparse_med",
+      "seq_len": 131072,
+      "sparsity": 0.6144,
+      "flash_ms": 409.3679,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 632.5644,
+          "t_select_ms": 30.1561,
+          "t_kernel_ms": 602.4083,
+          "mse": 2.28e-05,
+          "kl": 1.13e-05,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 791.6988,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 791.6988,
+          "mse": 1e-07,
+          "kl": 1e-07,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 102.9832,
+          "t_select_ms": 5.7544,
+          "t_kernel_ms": 97.2288,
+          "mse": 0.0004885,
+          "kl": 2.41e-05,
+          "passed": true,
+          "backend": "knorm",
+          "params": {
+            "strategy": "HierarchicalKNorm",
+            "active_frac": 0.35
+          },
+          "reason": "HierarchicalKNorm(O(L\u00b7D)): est 144.65 ms (sel=5.875 ms, kernel\u2248143.07 ms) | all candidates: knorm=144.65ms, structural=171.07ms, flex=203.05ms, pbs=347.45ms",
+          "active_fraction": 0.1875,
+          "is_theory_kernel": false
+        }
+      },
+      "gain_vs_pbs_pct": 83.72,
+      "ours_decision": "[knorm](strategy=HierarchicalKNorm, active_frac=0.35) \u2014 HierarchicalKNorm(O(L\u00b7D)): est 144.65 ms (sel=5.875 ms, kernel\u2248143.07 ms) | all candidates: knorm=144.65ms, structural=171.07ms, flex=203.05ms, pbs=347.45ms"
+    },
+    {
+      "scenario": "sparse_high",
+      "seq_len": 4096,
+      "sparsity": 0.4357,
+      "flash_ms": 0.4779,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 1.7022,
+          "t_select_ms": 1.2018,
+          "t_kernel_ms": 0.5004,
+          "mse": 0.0051633,
+          "kl": 0.002561,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 3.4028,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 3.4028,
+          "mse": 4.9e-06,
+          "kl": 2.4e-06,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 0.3298,
+          "t_select_ms": 0.0541,
+          "t_kernel_ms": 0.2758,
+          "mse": 0.0245239,
+          "kl": 0.0013611,
+          "passed": false,
+          "backend": "structural",
+          "params": {
+            "strategy": "GlobalSinkWindow",
+            "sink_blocks": 2,
+            "window_blocks": 4,
+            "stride_blocks": 2,
+            "active_frac": 0.62
+          },
+          "reason": "Structural(O(1)): est 0.25 ms (sel=0.005 ms, kernel\u22480.24 ms) | all candidates: structural=0.25ms, knorm=0.74ms, pbs=1.42ms",
+          "active_fraction": 0.1875,
+          "is_theory_kernel": false
+        }
+      },
+      "gain_vs_pbs_pct": 80.63,
+      "ours_decision": "[structural](strategy=GlobalSinkWindow, sink_blocks=2, window_blocks=4, stride_blocks=2, active_frac=0.62) \u2014 Structural(O(1)): est 0.25 ms (sel=0.005 ms, kernel\u22480.24 ms) | all candidates: structural=0.25ms, knorm=0.74ms, pbs=1.42ms"
+    },
+    {
+      "scenario": "sparse_high",
+      "seq_len": 8192,
+      "sparsity": 0.4667,
+      "flash_ms": 1.5824,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 3.5601,
+          "t_select_ms": 1.6561,
+          "t_kernel_ms": 1.904,
+          "mse": 0.0047379,
+          "kl": 0.0023497,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 7.1789,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 7.1789,
+          "mse": 1.6e-06,
+          "kl": 8e-07,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 0.4342,
+          "t_select_ms": 0.0526,
+          "t_kernel_ms": 0.3816,
+          "mse": 0.0216866,
+          "kl": 0.0011887,
+          "passed": false,
+          "backend": "structural",
+          "params": {
+            "strategy": "GlobalSinkWindow",
+            "sink_blocks": 2,
+            "window_blocks": 6,
+            "stride_blocks": 2,
+            "active_frac": 0.59
+          },
+          "reason": "Structural(O(1)): est 0.93 ms (sel=0.005 ms, kernel\u22480.92 ms) | all candidates: structural=0.93ms, knorm=1.46ms, pbs=3.47ms",
+          "active_fraction": 0.125,
+          "is_theory_kernel": false
+        }
+      },
+      "gain_vs_pbs_pct": 87.8,
+      "ours_decision": "[structural](strategy=GlobalSinkWindow, sink_blocks=2, window_blocks=6, stride_blocks=2, active_frac=0.59) \u2014 Structural(O(1)): est 0.93 ms (sel=0.005 ms, kernel\u22480.92 ms) | all candidates: structural=0.93ms, knorm=1.46ms, pbs=3.47ms"
+    },
+    {
+      "scenario": "sparse_high",
+      "seq_len": 16384,
+      "sparsity": 0.6305,
+      "flash_ms": 5.6726,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 11.4313,
+          "t_select_ms": 4.1376,
+          "t_kernel_ms": 7.2936,
+          "mse": 0.004139,
+          "kl": 0.0020525,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 16.6492,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 16.6492,
+          "mse": 1.7e-06,
+          "kl": 9e-07,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 1.1053,
+          "t_select_ms": 0.125,
+          "t_kernel_ms": 0.9803,
+          "mse": 0.0252298,
+          "kl": 0.0014333,
+          "passed": false,
+          "backend": "structural",
+          "params": {
+            "strategy": "DecayedWindowSink",
+            "sink_blocks": 2,
+            "window_blocks": 13,
+            "stride_blocks": 4,
+            "active_frac": 0.41
+          },
+          "reason": "Structural(O(1)): est 2.57 ms (sel=0.005 ms, kernel\u22482.56 ms) | all candidates: structural=2.57ms, knorm=3.14ms, pbs=9.22ms",
+          "active_fraction": 0.1562,
+          "is_theory_kernel": false
+        }
+      },
+      "gain_vs_pbs_pct": 90.33,
+      "ours_decision": "[structural](strategy=DecayedWindowSink, sink_blocks=2, window_blocks=13, stride_blocks=4, active_frac=0.41) \u2014 Structural(O(1)): est 2.57 ms (sel=0.005 ms, kernel\u22482.56 ms) | all candidates: structural=2.57ms, knorm=3.14ms, pbs=9.22ms"
+    },
+    {
+      "scenario": "sparse_high",
+      "seq_len": 32768,
+      "sparsity": 0.6584,
+      "flash_ms": 24.3838,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 40.9996,
+          "t_select_ms": 6.8424,
+          "t_kernel_ms": 34.1572,
+          "mse": 0.003041,
+          "kl": 0.001508,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 54.5085,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 54.5085,
+          "mse": 1.1e-06,
+          "kl": 5e-07,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 9.067,
+          "t_select_ms": 1.573,
+          "t_kernel_ms": 7.494,
+          "mse": 0.0120681,
+          "kl": 0.0007329,
+          "passed": true,
+          "backend": "knorm",
+          "params": {
+            "strategy": "HierarchicalKNorm",
+            "active_frac": 0.31
+          },
+          "reason": "HierarchicalKNorm(O(L\u00b7D)): est 9.43 ms (sel=1.746 ms, kernel\u22487.92 ms) | all candidates: knorm=9.43ms, structural=9.48ms, pbs=27.95ms",
+          "active_fraction": 0.1914,
+          "is_theory_kernel": false
+        }
+      },
+      "gain_vs_pbs_pct": 77.89,
+      "ours_decision": "[knorm](strategy=HierarchicalKNorm, active_frac=0.31) \u2014 HierarchicalKNorm(O(L\u00b7D)): est 9.43 ms (sel=1.746 ms, kernel\u22487.92 ms) | all candidates: knorm=9.43ms, structural=9.48ms, pbs=27.95ms"
+    },
+    {
+      "scenario": "sparse_high",
+      "seq_len": 65536,
+      "sparsity": 0.6787,
+      "flash_ms": 97.6483,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 157.1673,
+          "t_select_ms": 13.9728,
+          "t_kernel_ms": 143.1945,
+          "mse": 0.0021636,
+          "kl": 0.0010732,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 201.9543,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 201.9543,
+          "mse": 7e-07,
+          "kl": 3e-07,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 28.7486,
+          "t_select_ms": 2.9179,
+          "t_kernel_ms": 25.8307,
+          "mse": 0.0100494,
+          "kl": 0.0006141,
+          "passed": true,
+          "backend": "knorm",
+          "params": {
+            "strategy": "HierarchicalKNorm",
+            "active_frac": 0.3
+          },
+          "reason": "HierarchicalKNorm(O(L\u00b7D)): est 32.03 ms (sel=3.123 ms, kernel\u224829.80 ms) | all candidates: knorm=32.03ms, structural=35.64ms, flex=91.31ms, pbs=93.76ms",
+          "active_fraction": 0.1895,
+          "is_theory_kernel": false
+        }
+      },
+      "gain_vs_pbs_pct": 81.71,
+      "ours_decision": "[knorm](strategy=HierarchicalKNorm, active_frac=0.3) \u2014 HierarchicalKNorm(O(L\u00b7D)): est 32.03 ms (sel=3.123 ms, kernel\u224829.80 ms) | all candidates: knorm=32.03ms, structural=35.64ms, flex=91.31ms, pbs=93.76ms"
+    },
+    {
+      "scenario": "sparse_high",
+      "seq_len": 131072,
+      "sparsity": 0.7036,
+      "flash_ms": 409.6696,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 631.6957,
+          "t_select_ms": 32.5489,
+          "t_kernel_ms": 599.1468,
+          "mse": 0.0014035,
+          "kl": 0.0006961,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 786.787,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 786.787,
+          "mse": 3e-07,
+          "kl": 2e-07,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 103.2329,
+          "t_select_ms": 5.8557,
+          "t_kernel_ms": 97.3773,
+          "mse": 0.0081442,
+          "kl": 0.0005039,
+          "passed": true,
+          "backend": "knorm",
+          "params": {
+            "strategy": "HierarchicalKNorm",
+            "active_frac": 0.27
+          },
+          "reason": "HierarchicalKNorm(O(L\u00b7D)): est 112.53 ms (sel=5.875 ms, kernel\u2248109.96 ms) | all candidates: knorm=112.53ms, structural=131.47ms, flex=186.85ms, pbs=337.20ms",
+          "active_fraction": 0.1885,
+          "is_theory_kernel": false
+        }
+      },
+      "gain_vs_pbs_pct": 83.66,
+      "ours_decision": "[knorm](strategy=HierarchicalKNorm, active_frac=0.27) \u2014 HierarchicalKNorm(O(L\u00b7D)): est 112.53 ms (sel=5.875 ms, kernel\u2248109.96 ms) | all candidates: knorm=112.53ms, structural=131.47ms, flex=186.85ms, pbs=337.20ms"
+    },
+    {
+      "scenario": "lm_sink_local",
+      "seq_len": 4096,
+      "sparsity": 0.42,
+      "flash_ms": 0.4908,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 1.6282,
+          "t_select_ms": 1.251,
+          "t_kernel_ms": 0.3772,
+          "mse": 1.12e-05,
+          "kl": 5.6e-06,
+          "passed": true,
+          "active_fraction": 0.7684
+        },
+        "flex_fixed": {
+          "t_total_ms": 3.5546,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 3.5546,
+          "mse": 0.0007404,
+          "kl": 0.0003635,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 1.6387,
+          "t_select_ms": 1.1599,
+          "t_kernel_ms": 0.4789,
+          "mse": 1.34e-05,
+          "kl": 6.6e-06,
+          "passed": true,
+          "backend": "pbs",
+          "params": {
+            "threshold": 0.89,
+            "segment_size": 256,
+            "block_size": 128,
+            "use_triton": true,
+            "force_first": true
+          },
+          "reason": "PBS: est 1.42 ms (sel=1.09 ms, kernel\u22480.22 ms); adaptive thr=0.89, seg=256; Flex skipped (L=4096 < flex_min=65536) | all candidates: pbs=1.42ms",
+          "active_fraction": 0.9757
+        }
+      },
+      "gain_vs_pbs_pct": -0.64,
+      "ours_decision": "[pbs](threshold=0.89, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 1.42 ms (sel=1.09 ms, kernel\u22480.22 ms); adaptive thr=0.89, seg=256; Flex skipped (L=4096 < flex_min=65536) | all candidates: pbs=1.42ms"
+    },
+    {
+      "scenario": "lm_sink_local",
+      "seq_len": 8192,
+      "sparsity": 0.4762,
+      "flash_ms": 1.5852,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 3.4253,
+          "t_select_ms": 1.664,
+          "t_kernel_ms": 1.7613,
+          "mse": 1.77e-05,
+          "kl": 8.7e-06,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 6.2887,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 6.2887,
+          "mse": 0.0002444,
+          "kl": 0.0001205,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 3.2177,
+          "t_select_ms": 1.6189,
+          "t_kernel_ms": 1.5988,
+          "mse": 3.57e-05,
+          "kl": 1.76e-05,
+          "passed": true,
+          "backend": "pbs",
+          "params": {
+            "threshold": 0.86,
+            "segment_size": 256,
+            "block_size": 128,
+            "use_triton": true,
+            "force_first": true
+          },
+          "reason": "PBS: est 3.47 ms (sel=2.19 ms, kernel\u22480.78 ms); adaptive thr=0.86, seg=256; Flex skipped (L=8192 < flex_min=65536) | all candidates: pbs=3.47ms",
+          "active_fraction": 1.0
+        }
+      },
+      "gain_vs_pbs_pct": 6.06,
+      "ours_decision": "[pbs](threshold=0.86, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 3.47 ms (sel=2.19 ms, kernel\u22480.78 ms); adaptive thr=0.86, seg=256; Flex skipped (L=8192 < flex_min=65536) | all candidates: pbs=3.47ms"
+    },
+    {
+      "scenario": "lm_sink_local",
+      "seq_len": 16384,
+      "sparsity": 0.5405,
+      "flash_ms": 5.6248,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 10.4912,
+          "t_select_ms": 4.0458,
+          "t_kernel_ms": 6.4454,
+          "mse": 2.29e-05,
+          "kl": 1.14e-05,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 14.2302,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 14.2302,
+          "mse": 0.0001352,
+          "kl": 6.69e-05,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 9.4682,
+          "t_select_ms": 3.7195,
+          "t_kernel_ms": 5.7487,
+          "mse": 6.93e-05,
+          "kl": 3.43e-05,
+          "passed": true,
+          "backend": "pbs",
+          "params": {
+            "threshold": 0.83,
+            "segment_size": 256,
+            "block_size": 128,
+            "use_triton": true,
+            "force_first": true
+          },
+          "reason": "PBS: est 9.39 ms (sel=4.37 ms, kernel\u22482.75 ms); adaptive thr=0.83, seg=256; Flex skipped (L=16384 < flex_min=65536) | all candidates: pbs=9.39ms",
+          "active_fraction": 1.0
+        }
+      },
+      "gain_vs_pbs_pct": 9.75,
+      "ours_decision": "[pbs](threshold=0.83, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 9.39 ms (sel=4.37 ms, kernel\u22482.75 ms); adaptive thr=0.83, seg=256; Flex skipped (L=16384 < flex_min=65536) | all candidates: pbs=9.39ms"
+    },
+    {
+      "scenario": "lm_sink_local",
+      "seq_len": 32768,
+      "sparsity": 0.5929,
+      "flash_ms": 24.3907,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 37.5047,
+          "t_select_ms": 5.8863,
+          "t_kernel_ms": 31.6184,
+          "mse": 2.62e-05,
+          "kl": 1.3e-05,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 49.5217,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 49.5217,
+          "mse": 3.5e-05,
+          "kl": 1.73e-05,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 31.8061,
+          "t_select_ms": 5.5532,
+          "t_kernel_ms": 26.253,
+          "mse": 0.0001128,
+          "kl": 5.59e-05,
+          "passed": true,
+          "backend": "pbs",
+          "params": {
+            "threshold": 0.8,
+            "segment_size": 256,
+            "block_size": 128,
+            "use_triton": true,
+            "force_first": true
+          },
+          "reason": "PBS: est 28.43 ms (sel=8.74 ms, kernel\u22489.75 ms); adaptive thr=0.8, seg=256; Flex skipped (L=32768 < flex_min=65536) | all candidates: pbs=28.43ms",
+          "active_fraction": 1.0
+        }
+      },
+      "gain_vs_pbs_pct": 15.19,
+      "ours_decision": "[pbs](threshold=0.8, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 28.43 ms (sel=8.74 ms, kernel\u22489.75 ms); adaptive thr=0.8, seg=256; Flex skipped (L=32768 < flex_min=65536) | all candidates: pbs=28.43ms"
+    },
+    {
+      "scenario": "lm_sink_local",
+      "seq_len": 65536,
+      "sparsity": 0.6259,
+      "flash_ms": 96.7206,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 141.911,
+          "t_select_ms": 13.9008,
+          "t_kernel_ms": 128.0102,
+          "mse": 2.71e-05,
+          "kl": 1.34e-05,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 189.5578,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 189.5578,
+          "mse": 1.22e-05,
+          "kl": 6.1e-06,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "strategy": "ours_flex",
+          "t_total_ms": 95.215,
+          "t_select_ms": 67.536,
+          "t_kernel_ms": 27.679,
+          "mse": null,
+          "kl": null,
+          "passed": null,
+          "is_theory": true,
+          "backend": "flex",
+          "params": {
+            "gamma": 0.8,
+            "tau": 0.2,
+            "min_budget_frac": 0.0,
+            "block_size": 128
+          },
+          "reason": "Flex(O(r\u00b7L\u00b7D)): est 95.21 ms (sel=67.54 ms) | all candidates: flex=95.21ms, pbs=95.27ms"
+        }
+      },
+      "gain_vs_pbs_pct": 32.91,
+      "ours_decision": "[flex](gamma=0.8, tau=0.2, min_budget_frac=0.0, block_size=128) \u2014 Flex(O(r\u00b7L\u00b7D)): est 95.21 ms (sel=67.54 ms) | all candidates: flex=95.21ms, pbs=95.27ms"
+    },
+    {
+      "scenario": "lm_sink_local",
+      "seq_len": 131072,
+      "sparsity": 0.6435,
+      "flash_ms": 404.1895,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 584.6238,
+          "t_select_ms": 27.209,
+          "t_kernel_ms": 557.4147,
+          "mse": 2.53e-05,
+          "kl": 1.25e-05,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 748.8823,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 748.8823,
+          "mse": 6.7e-06,
+          "kl": 3.3e-06,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "strategy": "ours_flex",
+          "t_total_ms": 197.772,
+          "t_select_ms": 133.072,
+          "t_kernel_ms": 64.7,
+          "mse": null,
+          "kl": null,
+          "passed": null,
+          "is_theory": true,
+          "backend": "flex",
+          "params": {
+            "gamma": 0.8,
+            "tau": 0.2,
+            "min_budget_frac": 0.0,
+            "block_size": 128
+          },
+          "reason": "Flex(O(r\u00b7L\u00b7D)): est 197.77 ms (sel=133.07 ms) | all candidates: flex=197.77ms, pbs=344.11ms"
+        }
+      },
+      "gain_vs_pbs_pct": 66.17,
+      "ours_decision": "[flex](gamma=0.8, tau=0.2, min_budget_frac=0.0, block_size=128) \u2014 Flex(O(r\u00b7L\u00b7D)): est 197.77 ms (sel=133.07 ms) | all candidates: flex=197.77ms, pbs=344.11ms"
+    },
+    {
+      "scenario": "lm_sparse_global",
+      "seq_len": 4096,
+      "sparsity": 0.364,
+      "flash_ms": 0.4864,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 1.8456,
+          "t_select_ms": 1.1728,
+          "t_kernel_ms": 0.6728,
+          "mse": 0.0,
+          "kl": 0.0,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 10.0291,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 10.0291,
+          "mse": 0.000276,
+          "kl": 0.0001374,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 0.3368,
+          "t_select_ms": 0.0532,
+          "t_kernel_ms": 0.2836,
+          "mse": 0.0484237,
+          "kl": 0.0007692,
+          "passed": false,
+          "backend": "structural",
+          "params": {
+            "strategy": "GlobalSinkWindow",
+            "sink_blocks": 2,
+            "window_blocks": 4,
+            "stride_blocks": 2,
+            "active_frac": 0.7
+          },
+          "reason": "Structural(O(1)): est 0.28 ms (sel=0.005 ms, kernel\u22480.28 ms) | all candidates: structural=0.28ms, knorm=0.77ms, pbs=1.43ms",
+          "active_fraction": 0.1875,
+          "is_theory_kernel": false
+        }
+      },
+      "gain_vs_pbs_pct": 81.75,
+      "ours_decision": "[structural](strategy=GlobalSinkWindow, sink_blocks=2, window_blocks=4, stride_blocks=2, active_frac=0.7) \u2014 Structural(O(1)): est 0.28 ms (sel=0.005 ms, kernel\u22480.28 ms) | all candidates: structural=0.28ms, knorm=0.77ms, pbs=1.43ms"
+    },
+    {
+      "scenario": "lm_sparse_global",
+      "seq_len": 8192,
+      "sparsity": 0.3884,
+      "flash_ms": 1.5616,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 3.3993,
+          "t_select_ms": 1.6435,
+          "t_kernel_ms": 1.7558,
+          "mse": 0.0,
+          "kl": 0.0,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 13.4796,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 13.4796,
+          "mse": 0.0001072,
+          "kl": 5.33e-05,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 0.4389,
+          "t_select_ms": 0.0532,
+          "t_kernel_ms": 0.3857,
+          "mse": 0.0783541,
+          "kl": 0.0006015,
+          "passed": false,
+          "backend": "structural",
+          "params": {
+            "strategy": "GlobalSinkWindow",
+            "sink_blocks": 2,
+            "window_blocks": 6,
+            "stride_blocks": 2,
+            "active_frac": 0.67
+          },
+          "reason": "Structural(O(1)): est 1.06 ms (sel=0.005 ms, kernel\u22481.06 ms) | all candidates: structural=1.06ms, knorm=1.57ms, pbs=3.51ms",
+          "active_fraction": 0.125,
+          "is_theory_kernel": false
+        }
+      },
+      "gain_vs_pbs_pct": 87.09,
+      "ours_decision": "[structural](strategy=GlobalSinkWindow, sink_blocks=2, window_blocks=6, stride_blocks=2, active_frac=0.67) \u2014 Structural(O(1)): est 1.06 ms (sel=0.005 ms, kernel\u22481.06 ms) | all candidates: structural=1.06ms, knorm=1.57ms, pbs=3.51ms"
+    },
+    {
+      "scenario": "lm_sparse_global",
+      "seq_len": 16384,
+      "sparsity": 0.463,
+      "flash_ms": 5.6805,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 10.5226,
+          "t_select_ms": 3.7943,
+          "t_kernel_ms": 6.7284,
+          "mse": 0.0,
+          "kl": 0.0,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 22.3304,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 22.3304,
+          "mse": 5.94e-05,
+          "kl": 2.95e-05,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 1.1049,
+          "t_select_ms": 0.1245,
+          "t_kernel_ms": 0.9803,
+          "mse": 0.0382914,
+          "kl": 0.0004888,
+          "passed": false,
+          "backend": "structural",
+          "params": {
+            "strategy": "DecayedWindowSink",
+            "sink_blocks": 2,
+            "window_blocks": 13,
+            "stride_blocks": 4,
+            "active_frac": 0.59
+          },
+          "reason": "Structural(O(1)): est 3.73 ms (sel=0.005 ms, kernel\u22483.72 ms) | all candidates: structural=3.73ms, knorm=4.08ms, pbs=9.52ms",
+          "active_fraction": 0.1562,
+          "is_theory_kernel": false
+        }
+      },
+      "gain_vs_pbs_pct": 89.5,
+      "ours_decision": "[structural](strategy=DecayedWindowSink, sink_blocks=2, window_blocks=13, stride_blocks=4, active_frac=0.59) \u2014 Structural(O(1)): est 3.73 ms (sel=0.005 ms, kernel\u22483.72 ms) | all candidates: structural=3.73ms, knorm=4.08ms, pbs=9.52ms"
+    },
+    {
+      "scenario": "lm_sparse_global",
+      "seq_len": 32768,
+      "sparsity": 0.5748,
+      "flash_ms": 24.278,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 36.908,
+          "t_select_ms": 6.5836,
+          "t_kernel_ms": 30.3244,
+          "mse": 0.0,
+          "kl": 0.0,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 55.3824,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 55.3824,
+          "mse": 3.15e-05,
+          "kl": 1.56e-05,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 8.0006,
+          "t_select_ms": 1.5511,
+          "t_kernel_ms": 6.4495,
+          "mse": 0.0075056,
+          "kl": 0.0002632,
+          "passed": true,
+          "backend": "knorm",
+          "params": {
+            "strategy": "HierarchicalKNorm",
+            "active_frac": 0.39
+          },
+          "reason": "HierarchicalKNorm(O(L\u00b7D)): est 11.31 ms (sel=1.746 ms, kernel\u22489.86 ms) | all candidates: knorm=11.31ms, structural=11.79ms, pbs=28.56ms",
+          "active_fraction": 0.1875,
+          "is_theory_kernel": false
+        }
+      },
+      "gain_vs_pbs_pct": 78.32,
+      "ours_decision": "[knorm](strategy=HierarchicalKNorm, active_frac=0.39) \u2014 HierarchicalKNorm(O(L\u00b7D)): est 11.31 ms (sel=1.746 ms, kernel\u22489.86 ms) | all candidates: knorm=11.31ms, structural=11.79ms, pbs=28.56ms"
+    },
+    {
+      "scenario": "lm_sparse_global",
+      "seq_len": 65536,
+      "sparsity": 0.6088,
+      "flash_ms": 97.2145,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 140.2699,
+          "t_select_ms": 13.5718,
+          "t_kernel_ms": 126.6982,
+          "mse": 0.0,
+          "kl": 0.0,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 187.1148,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 187.1148,
+          "mse": 1.47e-05,
+          "kl": 7.3e-06,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 29.7525,
+          "t_select_ms": 2.9892,
+          "t_kernel_ms": 26.7633,
+          "mse": 0.0091664,
+          "kl": 0.000347,
+          "passed": true,
+          "backend": "knorm",
+          "params": {
+            "strategy": "HierarchicalKNorm",
+            "active_frac": 0.36
+          },
+          "reason": "HierarchicalKNorm(O(L\u00b7D)): est 38.32 ms (sel=3.123 ms, kernel\u224836.29 ms) | all candidates: knorm=38.32ms, structural=43.39ms, pbs=95.77ms, flex=96.48ms",
+          "active_fraction": 0.1895,
+          "is_theory_kernel": false
+        }
+      },
+      "gain_vs_pbs_pct": 78.79,
+      "ours_decision": "[knorm](strategy=HierarchicalKNorm, active_frac=0.36) \u2014 HierarchicalKNorm(O(L\u00b7D)): est 38.32 ms (sel=3.123 ms, kernel\u224836.29 ms) | all candidates: knorm=38.32ms, structural=43.39ms, pbs=95.77ms, flex=96.48ms"
+    },
+    {
+      "scenario": "lm_sparse_global",
+      "seq_len": 131072,
+      "sparsity": 0.6321,
+      "flash_ms": 406.3229,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 604.2908,
+          "t_select_ms": 27.92,
+          "t_kernel_ms": 576.3707,
+          "mse": 0.0,
+          "kl": 0.0,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 710.7451,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 710.7451,
+          "mse": 7.5e-06,
+          "kl": 3.7e-06,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 104.5841,
+          "t_select_ms": 5.7452,
+          "t_kernel_ms": 98.8389,
+          "mse": 0.0039017,
+          "kl": 0.0001537,
+          "passed": true,
+          "backend": "knorm",
+          "params": {
+            "strategy": "HierarchicalKNorm",
+            "active_frac": 0.34
+          },
+          "reason": "HierarchicalKNorm(O(L\u00b7D)): est 138.28 ms (sel=5.875 ms, kernel\u2248136.50 ms) | all candidates: knorm=138.28ms, structural=163.21ms, flex=199.84ms, pbs=345.42ms",
+          "active_fraction": 0.1885,
+          "is_theory_kernel": false
+        }
+      },
+      "gain_vs_pbs_pct": 82.69,
+      "ours_decision": "[knorm](strategy=HierarchicalKNorm, active_frac=0.34) \u2014 HierarchicalKNorm(O(L\u00b7D)): est 138.28 ms (sel=5.875 ms, kernel\u2248136.50 ms) | all candidates: knorm=138.28ms, structural=163.21ms, flex=199.84ms, pbs=345.42ms"
+    },
+    {
+      "scenario": "lm_hierarchical",
+      "seq_len": 4096,
+      "sparsity": 0.2753,
+      "flash_ms": 0.4946,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 1.7009,
+          "t_select_ms": 1.1756,
+          "t_kernel_ms": 0.5253,
+          "mse": 0.0001413,
+          "kl": 6.98e-05,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 3.4386,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 3.4386,
+          "mse": 3.45e-05,
+          "kl": 1.7e-05,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 1.6937,
+          "t_select_ms": 1.152,
+          "t_kernel_ms": 0.5417,
+          "mse": 0.0001413,
+          "kl": 6.98e-05,
+          "passed": true,
+          "backend": "pbs",
+          "params": {
+            "threshold": 0.9,
+            "segment_size": 256,
+            "block_size": 128,
+            "use_triton": true,
+            "force_first": true
+          },
+          "reason": "PBS: est 1.44 ms (sel=1.09 ms, kernel\u22480.27 ms); adaptive thr=0.9, seg=256; Flex skipped (L=4096 < flex_min=65536) | all candidates: pbs=1.44ms",
+          "active_fraction": 1.0
+        }
+      },
+      "gain_vs_pbs_pct": 0.42,
+      "ours_decision": "[pbs](threshold=0.9, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 1.44 ms (sel=1.09 ms, kernel\u22480.27 ms); adaptive thr=0.9, seg=256; Flex skipped (L=4096 < flex_min=65536) | all candidates: pbs=1.44ms"
+    },
+    {
+      "scenario": "lm_hierarchical",
+      "seq_len": 8192,
+      "sparsity": 0.2672,
+      "flash_ms": 1.5869,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 3.639,
+          "t_select_ms": 1.7234,
+          "t_kernel_ms": 1.9156,
+          "mse": 0.0002611,
+          "kl": 0.0001291,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 7.1663,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 7.1663,
+          "mse": 1.81e-05,
+          "kl": 8.9e-06,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 3.5622,
+          "t_select_ms": 1.6893,
+          "t_kernel_ms": 1.8729,
+          "mse": 0.0002611,
+          "kl": 0.0001291,
+          "passed": true,
+          "backend": "pbs",
+          "params": {
+            "threshold": 0.9,
+            "segment_size": 256,
+            "block_size": 128,
+            "use_triton": true,
+            "force_first": true
+          },
+          "reason": "PBS: est 3.56 ms (sel=2.19 ms, kernel\u22481.10 ms); adaptive thr=0.9, seg=256; Flex skipped (L=8192 < flex_min=65536) | all candidates: pbs=3.56ms",
+          "active_fraction": 1.0
+        }
+      },
+      "gain_vs_pbs_pct": 2.11,
+      "ours_decision": "[pbs](threshold=0.9, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 3.56 ms (sel=2.19 ms, kernel\u22481.10 ms); adaptive thr=0.9, seg=256; Flex skipped (L=8192 < flex_min=65536) | all candidates: pbs=3.56ms"
+    },
+    {
+      "scenario": "lm_hierarchical",
+      "seq_len": 16384,
+      "sparsity": 0.3598,
+      "flash_ms": 5.5897,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 11.4234,
+          "t_select_ms": 4.4114,
+          "t_kernel_ms": 7.012,
+          "mse": 0.0003348,
+          "kl": 0.0001647,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 16.5103,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 16.5103,
+          "mse": 9.9e-06,
+          "kl": 4.9e-06,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 11.39,
+          "t_select_ms": 3.9072,
+          "t_kernel_ms": 7.4827,
+          "mse": 0.0003348,
+          "kl": 0.0001647,
+          "passed": true,
+          "backend": "pbs",
+          "params": {
+            "threshold": 0.9,
+            "segment_size": 256,
+            "block_size": 128,
+            "use_triton": true,
+            "force_first": true
+          },
+          "reason": "PBS: est 9.71 ms (sel=4.37 ms, kernel\u22483.83 ms); adaptive thr=0.9, seg=256; Flex skipped (L=16384 < flex_min=65536) | all candidates: pbs=9.71ms",
+          "active_fraction": 1.0
+        }
+      },
+      "gain_vs_pbs_pct": 0.29,
+      "ours_decision": "[pbs](threshold=0.9, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 9.71 ms (sel=4.37 ms, kernel\u22483.83 ms); adaptive thr=0.9, seg=256; Flex skipped (L=16384 < flex_min=65536) | all candidates: pbs=9.71ms"
+    },
+    {
+      "scenario": "lm_hierarchical",
+      "seq_len": 32768,
+      "sparsity": 0.4861,
+      "flash_ms": 24.1364,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 40.9754,
+          "t_select_ms": 7.0649,
+          "t_kernel_ms": 33.9104,
+          "mse": 0.0003285,
+          "kl": 0.0001623,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 54.3242,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 54.3242,
+          "mse": 4.6e-06,
+          "kl": 2.3e-06,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 39.3127,
+          "t_select_ms": 7.2533,
+          "t_kernel_ms": 32.0594,
+          "mse": 0.0006983,
+          "kl": 0.0003445,
+          "passed": true,
+          "backend": "pbs",
+          "params": {
+            "threshold": 0.86,
+            "segment_size": 256,
+            "block_size": 128,
+            "use_triton": true,
+            "force_first": true
+          },
+          "reason": "PBS: est 29.19 ms (sel=8.74 ms, kernel\u224812.31 ms); adaptive thr=0.86, seg=256; Flex skipped (L=32768 < flex_min=65536) | all candidates: pbs=29.19ms",
+          "active_fraction": 1.0
+        }
+      },
+      "gain_vs_pbs_pct": 4.06,
+      "ours_decision": "[pbs](threshold=0.86, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 29.19 ms (sel=8.74 ms, kernel\u224812.31 ms); adaptive thr=0.86, seg=256; Flex skipped (L=32768 < flex_min=65536) | all candidates: pbs=29.19ms"
+    },
+    {
+      "scenario": "lm_hierarchical",
+      "seq_len": 65536,
+      "sparsity": 0.5115,
+      "flash_ms": 97.2035,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 156.9096,
+          "t_select_ms": 14.6251,
+          "t_kernel_ms": 142.2845,
+          "mse": 0.0002614,
+          "kl": 0.000129,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 203.4019,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 203.4019,
+          "mse": 2.1e-06,
+          "kl": 1e-06,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 147.7827,
+          "t_select_ms": 12.0665,
+          "t_kernel_ms": 135.7162,
+          "mse": 0.0007269,
+          "kl": 0.0003585,
+          "passed": true,
+          "backend": "pbs",
+          "params": {
+            "threshold": 0.84,
+            "segment_size": 512,
+            "block_size": 128,
+            "use_triton": true,
+            "force_first": true
+          },
+          "reason": "PBS: est 98.56 ms (sel=17.48 ms, kernel\u224846.78 ms); adaptive thr=0.84, seg=512 | all candidates: pbs=98.56ms, flex=103.68ms",
+          "active_fraction": 1.0
+        }
+      },
+      "gain_vs_pbs_pct": 5.82,
+      "ours_decision": "[pbs](threshold=0.84, segment_size=512, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 98.56 ms (sel=17.48 ms, kernel\u224846.78 ms); adaptive thr=0.84, seg=512 | all candidates: pbs=98.56ms, flex=103.68ms"
+    },
+    {
+      "scenario": "lm_hierarchical",
+      "seq_len": 131072,
+      "sparsity": 0.5426,
+      "flash_ms": 406.84,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 631.9865,
+          "t_select_ms": 24.8596,
+          "t_kernel_ms": 607.1269,
+          "mse": 0.0001788,
+          "kl": 8.84e-05,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 790.5096,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 790.5096,
+          "mse": 1e-06,
+          "kl": 5e-07,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "strategy": "ours_flex",
+          "t_total_ms": 216.072,
+          "t_select_ms": 133.072,
+          "t_kernel_ms": 83.0,
+          "mse": null,
+          "kl": null,
+          "passed": null,
+          "is_theory": true,
+          "backend": "flex",
+          "params": {
+            "gamma": 0.9,
+            "tau": 0.2,
+            "min_budget_frac": 0.0,
+            "block_size": 128
+          },
+          "reason": "Flex(O(r\u00b7L\u00b7D)): est 216.07 ms (sel=133.07 ms) | all candidates: flex=216.07ms, pbs=355.70ms"
+        }
+      },
+      "gain_vs_pbs_pct": 65.81,
+      "ours_decision": "[flex](gamma=0.9, tau=0.2, min_budget_frac=0.0, block_size=128) \u2014 Flex(O(r\u00b7L\u00b7D)): est 216.07 ms (sel=133.07 ms) | all candidates: flex=216.07ms, pbs=355.70ms"
+    },
+    {
+      "scenario": "lm_local_periodic",
+      "seq_len": 4096,
+      "sparsity": 0.3756,
+      "flash_ms": 0.482,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 1.8371,
+          "t_select_ms": 1.167,
+          "t_kernel_ms": 0.67,
+          "mse": 2.1e-05,
+          "kl": 1.04e-05,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 3.1382,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 3.1382,
+          "mse": 0.0002741,
+          "kl": 0.0001348,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 1.6507,
+          "t_select_ms": 1.1626,
+          "t_kernel_ms": 0.4881,
+          "mse": 2.1e-05,
+          "kl": 1.04e-05,
+          "passed": true,
+          "backend": "pbs",
+          "params": {
+            "threshold": 0.9,
+            "segment_size": 256,
+            "block_size": 128,
+            "use_triton": true,
+            "force_first": true
+          },
+          "reason": "PBS: est 1.42 ms (sel=1.09 ms, kernel\u22480.23 ms); adaptive thr=0.9, seg=256; Flex skipped (L=4096 < flex_min=65536) | all candidates: pbs=1.42ms",
+          "active_fraction": 1.0
+        }
+      },
+      "gain_vs_pbs_pct": 10.15,
+      "ours_decision": "[pbs](threshold=0.9, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 1.42 ms (sel=1.09 ms, kernel\u22480.23 ms); adaptive thr=0.9, seg=256; Flex skipped (L=4096 < flex_min=65536) | all candidates: pbs=1.42ms"
+    },
+    {
+      "scenario": "lm_local_periodic",
+      "seq_len": 8192,
+      "sparsity": 0.4204,
+      "flash_ms": 1.5517,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 3.4953,
+          "t_select_ms": 1.6637,
+          "t_kernel_ms": 1.8316,
+          "mse": 3.43e-05,
+          "kl": 1.7e-05,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 6.6099,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 6.6099,
+          "mse": 0.0001289,
+          "kl": 6.38e-05,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 3.4068,
+          "t_select_ms": 1.6575,
+          "t_kernel_ms": 1.7493,
+          "mse": 4.04e-05,
+          "kl": 2e-05,
+          "passed": true,
+          "backend": "pbs",
+          "params": {
+            "threshold": 0.89,
+            "segment_size": 256,
+            "block_size": 128,
+            "use_triton": true,
+            "force_first": true
+          },
+          "reason": "PBS: est 3.49 ms (sel=2.19 ms, kernel\u22480.87 ms); adaptive thr=0.89, seg=256; Flex skipped (L=8192 < flex_min=65536) | all candidates: pbs=3.49ms",
+          "active_fraction": 1.0
+        }
+      },
+      "gain_vs_pbs_pct": 2.53,
+      "ours_decision": "[pbs](threshold=0.89, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 3.49 ms (sel=2.19 ms, kernel\u22480.87 ms); adaptive thr=0.89, seg=256; Flex skipped (L=8192 < flex_min=65536) | all candidates: pbs=3.49ms"
+    },
+    {
+      "scenario": "lm_local_periodic",
+      "seq_len": 16384,
+      "sparsity": 0.5018,
+      "flash_ms": 5.602,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 10.9503,
+          "t_select_ms": 4.4868,
+          "t_kernel_ms": 6.4635,
+          "mse": 4.27e-05,
+          "kl": 2.12e-05,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 15.5133,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 15.5133,
+          "mse": 5.04e-05,
+          "kl": 2.49e-05,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 10.2929,
+          "t_select_ms": 4.0274,
+          "t_kernel_ms": 6.2655,
+          "mse": 9.97e-05,
+          "kl": 4.94e-05,
+          "passed": true,
+          "backend": "pbs",
+          "params": {
+            "threshold": 0.85,
+            "segment_size": 256,
+            "block_size": 128,
+            "use_triton": true,
+            "force_first": true
+          },
+          "reason": "PBS: est 9.45 ms (sel=4.37 ms, kernel\u22482.98 ms); adaptive thr=0.85, seg=256; Flex skipped (L=16384 < flex_min=65536) | all candidates: pbs=9.45ms",
+          "active_fraction": 1.0
+        }
+      },
+      "gain_vs_pbs_pct": 6.0,
+      "ours_decision": "[pbs](threshold=0.85, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 9.45 ms (sel=4.37 ms, kernel\u22482.98 ms); adaptive thr=0.85, seg=256; Flex skipped (L=16384 < flex_min=65536) | all candidates: pbs=9.45ms"
+    },
+    {
+      "scenario": "lm_local_periodic",
+      "seq_len": 32768,
+      "sparsity": 0.5651,
+      "flash_ms": 24.1715,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 39.0772,
+          "t_select_ms": 6.768,
+          "t_kernel_ms": 32.3092,
+          "mse": 4.99e-05,
+          "kl": 2.48e-05,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 52.0755,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 52.0755,
+          "mse": 1.94e-05,
+          "kl": 9.7e-06,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 35.1546,
+          "t_select_ms": 6.7219,
+          "t_kernel_ms": 28.4327,
+          "mse": 0.0001716,
+          "kl": 8.5e-05,
+          "passed": true,
+          "backend": "pbs",
+          "params": {
+            "threshold": 0.82,
+            "segment_size": 256,
+            "block_size": 128,
+            "use_triton": true,
+            "force_first": true
+          },
+          "reason": "PBS: est 28.63 ms (sel=8.74 ms, kernel\u224810.41 ms); adaptive thr=0.82, seg=256; Flex skipped (L=32768 < flex_min=65536) | all candidates: pbs=28.63ms",
+          "active_fraction": 1.0
+        }
+      },
+      "gain_vs_pbs_pct": 10.04,
+      "ours_decision": "[pbs](threshold=0.82, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 28.63 ms (sel=8.74 ms, kernel\u224810.41 ms); adaptive thr=0.82, seg=256; Flex skipped (L=32768 < flex_min=65536) | all candidates: pbs=28.63ms"
+    },
+    {
+      "scenario": "lm_local_periodic",
+      "seq_len": 65536,
+      "sparsity": 0.6013,
+      "flash_ms": 96.9257,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 149.235,
+          "t_select_ms": 14.0189,
+          "t_kernel_ms": 135.2161,
+          "mse": 5.33e-05,
+          "kl": 2.64e-05,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 196.1127,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 196.1127,
+          "mse": 8.5e-06,
+          "kl": 4.2e-06,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 130.9297,
+          "t_select_ms": 13.9926,
+          "t_kernel_ms": 116.937,
+          "mse": 0.0002144,
+          "kl": 0.0001061,
+          "passed": true,
+          "backend": "pbs",
+          "params": {
+            "threshold": 0.8,
+            "segment_size": 512,
+            "block_size": 128,
+            "use_triton": true,
+            "force_first": true
+          },
+          "reason": "PBS: est 95.98 ms (sel=17.48 ms, kernel\u224838.19 ms); adaptive thr=0.8, seg=512 | all candidates: pbs=95.98ms, flex=97.04ms",
+          "active_fraction": 1.0
+        }
+      },
+      "gain_vs_pbs_pct": 12.27,
+      "ours_decision": "[pbs](threshold=0.8, segment_size=512, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 95.98 ms (sel=17.48 ms, kernel\u224838.19 ms); adaptive thr=0.8, seg=512 | all candidates: pbs=95.98ms, flex=97.04ms"
+    },
+    {
+      "scenario": "lm_local_periodic",
+      "seq_len": 131072,
+      "sparsity": 0.6204,
+      "flash_ms": 404.3315,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 606.0411,
+          "t_select_ms": 28.1614,
+          "t_kernel_ms": 577.8797,
+          "mse": 5.1e-05,
+          "kl": 2.53e-05,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 768.6454,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 768.6454,
+          "mse": 5e-06,
+          "kl": 2.5e-06,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "strategy": "ours_flex",
+          "t_total_ms": 201.959,
+          "t_select_ms": 133.072,
+          "t_kernel_ms": 68.887,
+          "mse": null,
+          "kl": null,
+          "passed": null,
+          "is_theory": true,
+          "backend": "flex",
+          "params": {
+            "gamma": 0.8,
+            "tau": 0.2,
+            "min_budget_frac": 0.0,
+            "block_size": 128
+          },
+          "reason": "Flex(O(r\u00b7L\u00b7D)): est 201.96 ms (sel=133.07 ms) | all candidates: flex=201.96ms, pbs=346.76ms"
+        }
+      },
+      "gain_vs_pbs_pct": 66.68,
+      "ours_decision": "[flex](gamma=0.8, tau=0.2, min_budget_frac=0.0, block_size=128) \u2014 Flex(O(r\u00b7L\u00b7D)): est 201.96 ms (sel=133.07 ms) | all candidates: flex=201.96ms, pbs=346.76ms"
+    },
+    {
+      "scenario": "lm_mixed",
+      "seq_len": 4096,
+      "sparsity": 0.4268,
+      "flash_ms": 0.4854,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 1.8302,
+          "t_select_ms": 1.2192,
+          "t_kernel_ms": 0.611,
+          "mse": 1.22e-05,
+          "kl": 6.1e-06,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 3.4929,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 3.4929,
+          "mse": 0.001012,
+          "kl": 0.0004985,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 1.6589,
+          "t_select_ms": 1.2114,
+          "t_kernel_ms": 0.4475,
+          "mse": 1.45e-05,
+          "kl": 7.2e-06,
+          "passed": true,
+          "backend": "pbs",
+          "params": {
+            "threshold": 0.89,
+            "segment_size": 256,
+            "block_size": 128,
+            "use_triton": true,
+            "force_first": true
+          },
+          "reason": "PBS: est 1.42 ms (sel=1.09 ms, kernel\u22480.21 ms); adaptive thr=0.89, seg=256; Flex skipped (L=4096 < flex_min=65536) | all candidates: pbs=1.42ms",
+          "active_fraction": 0.9219
+        }
+      },
+      "gain_vs_pbs_pct": 9.36,
+      "ours_decision": "[pbs](threshold=0.89, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 1.42 ms (sel=1.09 ms, kernel\u22480.21 ms); adaptive thr=0.89, seg=256; Flex skipped (L=4096 < flex_min=65536) | all candidates: pbs=1.42ms"
+    },
+    {
+      "scenario": "lm_mixed",
+      "seq_len": 8192,
+      "sparsity": 0.4807,
+      "flash_ms": 1.5766,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 3.3744,
+          "t_select_ms": 1.5657,
+          "t_kernel_ms": 1.8087,
+          "mse": 1.84e-05,
+          "kl": 9.1e-06,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 5.8146,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 5.8146,
+          "mse": 0.0009132,
+          "kl": 0.0004503,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 3.1519,
+          "t_select_ms": 1.5722,
+          "t_kernel_ms": 1.5797,
+          "mse": 3.63e-05,
+          "kl": 1.79e-05,
+          "passed": true,
+          "backend": "pbs",
+          "params": {
+            "threshold": 0.86,
+            "segment_size": 256,
+            "block_size": 128,
+            "use_triton": true,
+            "force_first": true
+          },
+          "reason": "PBS: est 3.47 ms (sel=2.19 ms, kernel\u22480.78 ms); adaptive thr=0.86, seg=256; Flex skipped (L=8192 < flex_min=65536) | all candidates: pbs=3.47ms",
+          "active_fraction": 1.0
+        }
+      },
+      "gain_vs_pbs_pct": 6.59,
+      "ours_decision": "[pbs](threshold=0.86, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 3.47 ms (sel=2.19 ms, kernel\u22480.78 ms); adaptive thr=0.86, seg=256; Flex skipped (L=8192 < flex_min=65536) | all candidates: pbs=3.47ms"
+    },
+    {
+      "scenario": "lm_mixed",
+      "seq_len": 16384,
+      "sparsity": 0.5471,
+      "flash_ms": 5.6829,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 10.423,
+          "t_select_ms": 3.9939,
+          "t_kernel_ms": 6.429,
+          "mse": 2.41e-05,
+          "kl": 1.2e-05,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 13.9622,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 13.9622,
+          "mse": 0.0001789,
+          "kl": 8.87e-05,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 9.218,
+          "t_select_ms": 3.4608,
+          "t_kernel_ms": 5.7573,
+          "mse": 7.27e-05,
+          "kl": 3.6e-05,
+          "passed": true,
+          "backend": "pbs",
+          "params": {
+            "threshold": 0.83,
+            "segment_size": 256,
+            "block_size": 128,
+            "use_triton": true,
+            "force_first": true
+          },
+          "reason": "PBS: est 9.37 ms (sel=4.37 ms, kernel\u22482.71 ms); adaptive thr=0.83, seg=256; Flex skipped (L=16384 < flex_min=65536) | all candidates: pbs=9.37ms",
+          "active_fraction": 1.0
+        }
+      },
+      "gain_vs_pbs_pct": 11.56,
+      "ours_decision": "[pbs](threshold=0.83, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 9.37 ms (sel=4.37 ms, kernel\u22482.71 ms); adaptive thr=0.83, seg=256; Flex skipped (L=16384 < flex_min=65536) | all candidates: pbs=9.37ms"
+    },
+    {
+      "scenario": "lm_mixed",
+      "seq_len": 32768,
+      "sparsity": 0.5993,
+      "flash_ms": 24.1036,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 36.6551,
+          "t_select_ms": 6.2587,
+          "t_kernel_ms": 30.3964,
+          "mse": 2.91e-05,
+          "kl": 1.44e-05,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 47.9618,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 47.9618,
+          "mse": 7.05e-05,
+          "kl": 3.48e-05,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "t_total_ms": 30.6982,
+          "t_select_ms": 6.4765,
+          "t_kernel_ms": 24.2217,
+          "mse": 0.0001267,
+          "kl": 6.28e-05,
+          "passed": true,
+          "backend": "pbs",
+          "params": {
+            "threshold": 0.8,
+            "segment_size": 256,
+            "block_size": 128,
+            "use_triton": true,
+            "force_first": true
+          },
+          "reason": "PBS: est 28.38 ms (sel=8.74 ms, kernel\u22489.59 ms); adaptive thr=0.8, seg=256; Flex skipped (L=32768 < flex_min=65536) | all candidates: pbs=28.38ms",
+          "active_fraction": 1.0
+        }
+      },
+      "gain_vs_pbs_pct": 16.25,
+      "ours_decision": "[pbs](threshold=0.8, segment_size=256, block_size=128, use_triton=True, force_first=True) \u2014 PBS: est 28.38 ms (sel=8.74 ms, kernel\u22489.59 ms); adaptive thr=0.8, seg=256; Flex skipped (L=32768 < flex_min=65536) | all candidates: pbs=28.38ms"
+    },
+    {
+      "scenario": "lm_mixed",
+      "seq_len": 65536,
+      "sparsity": 0.6311,
+      "flash_ms": 97.066,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 139.8811,
+          "t_select_ms": 12.7116,
+          "t_kernel_ms": 127.1695,
+          "mse": 3.26e-05,
+          "kl": 1.62e-05,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 184.221,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 184.221,
+          "mse": 3.51e-05,
+          "kl": 1.74e-05,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "strategy": "ours_flex",
+          "t_total_ms": 94.833,
+          "t_select_ms": 67.536,
+          "t_kernel_ms": 27.297,
+          "mse": null,
+          "kl": null,
+          "passed": null,
+          "is_theory": true,
+          "backend": "flex",
+          "params": {
+            "gamma": 0.8,
+            "tau": 0.2,
+            "min_budget_frac": 0.0,
+            "block_size": 128
+          },
+          "reason": "Flex(O(r\u00b7L\u00b7D)): est 94.83 ms (sel=67.54 ms) | all candidates: flex=94.83ms, pbs=95.12ms"
+        }
+      },
+      "gain_vs_pbs_pct": 32.2,
+      "ours_decision": "[flex](gamma=0.8, tau=0.2, min_budget_frac=0.0, block_size=128) \u2014 Flex(O(r\u00b7L\u00b7D)): est 94.83 ms (sel=67.54 ms) | all candidates: flex=94.83ms, pbs=95.12ms"
+    },
+    {
+      "scenario": "lm_mixed",
+      "seq_len": 131072,
+      "sparsity": 0.6492,
+      "flash_ms": 404.2906,
+      "strategies": {
+        "pbs_fixed": {
+          "t_total_ms": 574.8671,
+          "t_select_ms": 32.243,
+          "t_kernel_ms": 542.6241,
+          "mse": 3.28e-05,
+          "kl": 1.63e-05,
+          "passed": true,
+          "active_fraction": 1.0
+        },
+        "flex_fixed": {
+          "t_total_ms": 743.2574,
+          "t_select_ms": 0.0,
+          "t_kernel_ms": 743.2574,
+          "mse": 1.44e-05,
+          "kl": 7.1e-06,
+          "passed": true,
+          "active_fraction": 1.0,
+          "is_theory": false
+        },
+        "ours": {
+          "strategy": "ours_flex",
+          "t_total_ms": 196.733,
+          "t_select_ms": 133.072,
+          "t_kernel_ms": 63.661,
+          "mse": null,
+          "kl": null,
+          "passed": null,
+          "is_theory": true,
+          "backend": "flex",
+          "params": {
+            "gamma": 0.8,
+            "tau": 0.2,
+            "min_budget_frac": 0.0,
+            "block_size": 128
+          },
+          "reason": "Flex(O(r\u00b7L\u00b7D)): est 196.73 ms (sel=133.07 ms) | all candidates: flex=196.73ms, pbs=343.45ms"
+        }
+      },
+      "gain_vs_pbs_pct": 65.78,
+      "ours_decision": "[flex](gamma=0.8, tau=0.2, min_budget_frac=0.0, block_size=128) \u2014 Flex(O(r\u00b7L\u00b7D)): est 196.73 ms (sel=133.07 ms) | all candidates: flex=196.73ms, pbs=343.45ms"
+    }
+  ],
+  "router_crossovers": {
+    "structural_vs_pbs": {
+      "strategy_a": "GlobalSinkWindow (O(1))",
+      "strategy_b": "PBS (O(L))",
+      "crossover_L": 19,
+      "note": "below this L, structural overhead < PBS overhead"
+    },
+    "knorm_vs_pbs": {
+      "strategy_a": "BlockKNormTopK (O(L\u00b7D))",
+      "strategy_b": "PBS (O(L))",
+      "crossover_L": 1646,
+      "note": "below this L, KNorm overhead < PBS overhead (KNorm per-token cost is lower than PBS per-token cost)"
+    },
+    "sampled_r16_vs_pbs": {
+      "strategy_a": "SampledAttentionTopK(r=16)",
+      "strategy_b": "PBS (O(L))",
+      "crossover_L": null,
+      "note": "above this L, SampledTopK(r=16) overhead exceeds PBS"
+    }
+  }
+}
