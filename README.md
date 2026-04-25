@@ -54,6 +54,17 @@ pip install -e .
 
 The latest bundled numbers are in `results/comprehensive_eval.json` and `results/variant_comparison.json`. Re-run the scripts above to refresh after code or data changes.
 
+## Publishing (git)
+
+The repository is initialized on branch `main`. Large `data/cache/*.pt` files are **not** committed.
+
+```bash
+git remote add origin https://github.com/<you>/length-routing-study.git
+git push -u origin main
+```
+
+Cloners run the generator scripts in [`data/README.md`](data/README.md) before evaluation.
+
 ## License
 
 See project root or upstream dependencies for license terms of bundled ideas (PBS / Flex attention implementations are external).
