@@ -1,4 +1,4 @@
-﻿"""
+"""
 Empirical PBS / FlexPrefill kernel sweep.
 
 Runs the **real** PBS and FlexPrefill CUDA/Triton kernels across a

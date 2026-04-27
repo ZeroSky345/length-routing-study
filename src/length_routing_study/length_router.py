@@ -1,4 +1,4 @@
-﻿"""
+"""
 Length- and sparsity-aware routing algorithm for sparse attention methods.
 
 Given that a sparse attention backend MUST be used (the caller has already

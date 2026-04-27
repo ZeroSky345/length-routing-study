@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """
 Comprehensive Evaluation: Ours vs PBS Fixed (4K?128K)
 =======================================================

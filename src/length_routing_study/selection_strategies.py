@@ -1,4 +1,4 @@
-﻿"""
+"""
 Mask-based selection strategies for block-sparse attention.
 
 These strategies sit between two extremes:
