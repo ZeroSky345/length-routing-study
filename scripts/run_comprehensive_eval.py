@@ -1,22 +1,18 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
-Comprehensive Evaluation: Ours vs PBS Fixed (4K–128K)
+Comprehensive Evaluation: Ours vs PBS Fixed (4K?128K)
 =======================================================
-Measures PBS Fixed and Ours (adaptive router) empirically on 8 scenarios.
-Flex Fixed uses the calibrated analytical cost model (theoretical) since
-empirical Flex measurement requires Triton warm-up (adds ~2 min per run).
+Measures PBS Fixed, Flex Fixed, and Ours (adaptive router) empirically on 8 scenarios.
 
-For each (scenario × length) cell, records:
+For each (scenario ? length) cell, records:
   Speed : t_total_ms, t_select_ms, t_kernel_ms
   Accuracy: mse (vs Flash dense reference), kl divergence, passed (bool)
+  Structure: kernel_time_ratio, active_block_fraction
   Gain : % speedup of Ours vs PBS Fixed
 
 Usage
 -----
-  python scripts/run_comprehensive_eval.py \
-      --lengths 4096 8192 16384 32768 65536 131072 \
-      --cache-dir data/cache \
-      --warmup 3 --repeats 7
+  python scripts/run_comprehensive_eval.py       --lengths 4096 8192 16384 32768 65536 131072       --cache-dir data/cache       --warmup 3 --repeats 7
 """
 from __future__ import annotations
 
@@ -66,50 +62,21 @@ ALL_SCENARIOS = [
     "lm_mixed",          # composite: sink + anchors + local
 ]
 
-
-# ── Flex theory estimate ──────────────────────────────────────────────────────
-
-def flex_theory(router: LengthAwareRouter, L: int, sparsity: float,
-                label: str = "flex_fixed") -> dict:
-    """
-    Analytical Flex estimate using the router's calibrated cost model.
-
-    Uses router._t_flex_total (which applies _flex_sparsity_scale) so that
-    the theory estimate is consistent with the routing decision.
-    """
-    t_sel   = router._t_select_flex(L)
-    t_total = router._t_flex_total(L, sparsity)
-    t_ker   = max(0.0, t_total - t_sel)
-    return {
-        "strategy":    label,
-        "t_total_ms":  round(t_total, 3),
-        "t_select_ms": round(t_sel,   3),
-        "t_kernel_ms": round(t_ker,   3),
-        "mse": None, "kl": None, "passed": None,
-        "is_theory": True,
-    }
-
-
-# ── One cell: Flash + PBS_Fixed + Ours ────────────────────────────────────────
-
 def run_cell(
     scenario: str, L: int,
     cache_dir: Path, router: LengthAwareRouter,
     warmup: int, repeats: int, seed: int, device: str,
 ) -> dict:
-    # Load QKV
     q, k, v = load_qkv(cache_dir, L, prompt_family=scenario,
                         seed=seed, device=device)
     dtype = q.dtype
     k = k.to(dtype=dtype)
     v = v.to(dtype=dtype)
 
-    # Sparsity estimate (includes K-norm CV for attention-type detection)
     sp       = estimate_sparsity(q, k, block_size=128, sample_rows=64, seed=seed)
     sparsity = sp.estimated_sparsity_ratio
     knorm_cv = sp.kv_norm_cv
 
-    # Flash reference (accuracy baseline + timing for PBS decompose)
     flash_rec = run_flash(q, k, v, warmup=warmup, repeats=repeats)
     flash_ms  = flash_rec.t_mean_ms
 
@@ -118,84 +85,87 @@ def run_cell(
 
     strats: dict[str, dict] = {}
 
-    # ── PBS Fixed ──────────────────────────────────────────────────────────
     try:
         r = run_pbs_decomposed(q, k, v, PBS_FIXED,
                                flash_time_ms=flash_ms, reference=ref,
                                warmup=warmup, repeats=repeats)
-        strats["pbs_fixed"] = {
-            "t_total_ms":  round(r.t_mean_ms,   4),
-            "t_select_ms": round(r.t_select_ms,  4),
-            "t_kernel_ms": round(r.t_kernel_ms,  4),
-            "mse": round(r.mse, 7), "kl": round(r.kl, 7),
-            "passed": bool(r.passed),
-            "active_fraction": round(r.active_fraction, 4),
+        strats['pbs_fixed'] = {
+            't_total_ms':  round(r.t_mean_ms, 4),
+            't_select_ms': round(r.t_select_ms, 4),
+            't_kernel_ms': round(r.t_kernel_ms, 4),
+            'mse': round(r.mse, 7), 'kl': round(r.kl, 7),
+            'passed': bool(r.passed),
+            'kernel_time_ratio': r.kernel_time_ratio,
+            'active_block_fraction': r.active_block_fraction,
+            'is_theory': False,
         }
     except Exception as exc:
-        warnings.warn(f"PBS @ {scenario} L={L}: {exc}")
+        warnings.warn(f'PBS @ {scenario} L={L}: {exc}')
 
-    # ── Flex Fixed (empirical) ─────────────────────────────────────────────
     try:
         rf = run_flex(q, k, v, FLEX_FIXED, reference=ref,
                       warmup=warmup, repeats=repeats)
-        strats["flex_fixed"] = {
-            "t_total_ms":  round(rf.t_mean_ms, 4),
-            "t_select_ms": 0.0,
-            "t_kernel_ms": round(rf.t_mean_ms, 4),
-            "mse": round(rf.mse, 7), "kl": round(rf.kl, 7),
-            "passed": bool(rf.mse <= 0.02 and rf.kl <= 0.10),
-            "active_fraction": round(rf.active_fraction, 4),
-            "is_theory": False,
+        strats['flex_fixed'] = {
+            't_total_ms':  round(rf.t_mean_ms, 4),
+            't_select_ms': 0.0,
+            't_kernel_ms': round(rf.t_mean_ms, 4),
+            'mse': round(rf.mse, 7), 'kl': round(rf.kl, 7),
+            'passed': bool(rf.mse <= 0.02 and rf.kl <= 0.10),
+            'kernel_time_ratio': rf.kernel_time_ratio,
+            'active_block_fraction': rf.active_block_fraction,
+            'is_theory': False,
         }
     except Exception as exc:
-        warnings.warn(f"Flex @ {scenario} L={L}: {exc}")
+        warnings.warn(f'Flex @ {scenario} L={L}: {exc}')
 
-    # ── Ours (full adaptive router — considers all tiers) ─────────────────
     decision = router.route_full(L, sparsity=sparsity, k_norm_cv=knorm_cv)
 
-    if decision.backend == "pbs":
+    if decision.backend == 'pbs':
         pbs_cfg = PBSConfig(**{
             k_: v_ for k_, v_ in decision.params.items()
-            if k_ in ("threshold", "segment_size", "block_size", "use_triton", "force_first")
+            if k_ in ('threshold', 'segment_size', 'block_size', 'use_triton', 'force_first')
         })
         try:
             r = run_pbs_decomposed(q, k, v, pbs_cfg,
                                    flash_time_ms=flash_ms, reference=ref,
                                    warmup=warmup, repeats=repeats)
-            strats["ours"] = {
-                "t_total_ms":  round(r.t_mean_ms,   4),
-                "t_select_ms": round(r.t_select_ms,  4),
-                "t_kernel_ms": round(r.t_kernel_ms,  4),
-                "mse": round(r.mse, 7), "kl": round(r.kl, 7),
-                "passed": bool(r.passed),
-                "backend":   decision.backend,
-                "params":    decision.params,
-                "reason":    decision.reason,
-                "active_fraction": round(r.active_fraction, 4),
+            strats['ours'] = {
+                't_total_ms':  round(r.t_mean_ms, 4),
+                't_select_ms': round(r.t_select_ms, 4),
+                't_kernel_ms': round(r.t_kernel_ms, 4),
+                'mse': round(r.mse, 7), 'kl': round(r.kl, 7),
+                'passed': bool(r.passed),
+                'backend': decision.backend,
+                'params': decision.params,
+                'reason': decision.reason,
+                'kernel_time_ratio': r.kernel_time_ratio,
+                'active_block_fraction': r.active_block_fraction,
+                'is_theory': False,
             }
         except Exception as exc:
-            warnings.warn(f"Ours-PBS @ {scenario} L={L}: {exc}")
+            warnings.warn(f'Ours-PBS @ {scenario} L={L}: {exc}')
 
-    elif decision.backend in ("structural", "knorm", "coverage"):
-        # Mask-based strategy: measure selection overhead empirically,
-        # estimate kernel time as T_flash × active_frac (no real sparse kernel yet).
+    elif decision.strategy_instance is not None:
         strategy = decision.strategy_instance
         if strategy is None:
-            warnings.warn(f"Ours-mask @ {scenario} L={L}: no strategy_instance")
+            warnings.warn(f'Ours-mask @ {scenario} L={L}: no strategy_instance')
         else:
             try:
-                # Warmup: handles CUDA/Triton JIT cold-start for both selection and kernel
                 for _ in range(warmup):
                     wr = strategy.select(q, k, v, block_size=128)
                     run_block_sparse_attention_flex(q, k, v, wr.block_mask, block_size=128)
-                sel_result = strategy.select(q, k, v, block_size=128)
-                t_sel_ms   = sel_result.t_select_ms
-                af         = sel_result.active_fraction
 
-                # Real sparse kernel: flex_attention with BlockMask (actual speedup)
+                sel_times: list[float] = []
+                sel_result = None
+                for _ in range(repeats):
+                    sel_result = strategy.select(q, k, v, block_size=128)
+                    sel_times.append(sel_result.t_select_ms)
+                assert sel_result is not None
+                t_sel_ms = float(sum(sel_times) / len(sel_times))
+                af = sel_result.active_fraction
+
                 out_sparse, t_ker_ms = run_block_sparse_attention_flex(
                     q, k, v, sel_result.block_mask, block_size=128)
-                # Average over repeats for stable kernel timing
                 ker_times = [t_ker_ms]
                 for _ in range(repeats - 1):
                     _, t_ = run_block_sparse_attention_flex(
@@ -204,60 +174,74 @@ def run_cell(
                 t_ker_ms = float(sum(ker_times) / len(ker_times))
                 t_total  = t_sel_ms + t_ker_ms
 
-                # accuracy: use the sparse kernel output directly
                 out = out_sparse
                 mse = float(torch.mean((out.float() - ref.float()) ** 2).item())
                 kl  = float(
                     torch.nn.functional.kl_div(
                         torch.log_softmax(out.float().mean(-1), dim=-1),
                         torch.softmax(ref.float().mean(-1), dim=-1),
-                        reduction="batchmean",
+                        reduction='batchmean',
                     ).item()
                 )
-                strats["ours"] = {
-                    "t_total_ms":  round(t_total,  4),
-                    "t_select_ms": round(t_sel_ms, 4),
-                    "t_kernel_ms": round(t_ker_ms, 4),
-                    "mse": round(mse, 7), "kl": round(kl, 7),
-                    "passed": bool(mse <= 0.02 and kl <= 0.10),
-                    "backend": decision.backend,
-                    "params":  decision.params,
-                    "reason":  decision.reason,
-                    "active_fraction": round(af, 4),
-                    "is_theory_kernel": False,   # kernel time is ACTUALLY measured
+                strats['ours'] = {
+                    't_total_ms':  round(t_total, 4),
+                    't_select_ms': round(t_sel_ms, 4),
+                    't_kernel_ms': round(t_ker_ms, 4),
+                    'mse': round(mse, 7), 'kl': round(kl, 7),
+                    'passed': bool(mse <= 0.02 and kl <= 0.10),
+                    'backend': decision.backend,
+                    'params':  decision.params,
+                    'reason':  decision.reason,
+                    'kernel_time_ratio': None,
+                    'active_block_fraction': round(af, 4),
+                    'is_theory': False,
                 }
             except Exception as exc:
-                warnings.warn(f"Ours-mask @ {scenario} L={L}: {exc}")
+                warnings.warn(f'Ours-mask @ {scenario} L={L}: {exc}')
                 import traceback; traceback.print_exc()
 
     else:
-        # Flex backend — use calibrated theory
-        strats["ours"] = {**flex_theory(router, L, sparsity, label="ours_flex"),
-                          "backend": "flex", "params": decision.params,
-                          "reason": decision.reason}
+        flex_cfg = FlexConfig(**{
+            k_: v_ for k_, v_ in decision.params.items()
+            if k_ in ('gamma', 'tau', 'min_budget_frac', 'block_size')
+        })
+        try:
+            rf = run_flex(q, k, v, flex_cfg, reference=ref,
+                          warmup=warmup, repeats=repeats)
+            strats['ours'] = {
+                't_total_ms':  round(rf.t_mean_ms, 4),
+                't_select_ms': 0.0,
+                't_kernel_ms': round(rf.t_mean_ms, 4),
+                'mse': round(rf.mse, 7), 'kl': round(rf.kl, 7),
+                'passed': bool(rf.mse <= 0.02 and rf.kl <= 0.10),
+                'backend': 'flex',
+                'params': decision.params,
+                'reason': decision.reason,
+                'kernel_time_ratio': rf.kernel_time_ratio,
+                'active_block_fraction': rf.active_block_fraction,
+                'is_theory': False,
+            }
+        except Exception as exc:
+            warnings.warn(f'Ours-Flex @ {scenario} L={L}: {exc}')
 
     del q, k, v, ref
     torch.cuda.empty_cache()
 
-    # ── Compute gain ───────────────────────────────────────────────────────
     gain_vs_pbs = None
-    if "pbs_fixed" in strats and "ours" in strats:
-        pb = strats["pbs_fixed"]["t_total_ms"]
-        ou = strats["ours"]["t_total_ms"]
+    if 'pbs_fixed' in strats and 'ours' in strats:
+        pb = strats['pbs_fixed']['t_total_ms']
+        ou = strats['ours']['t_total_ms']
         if pb and ou and pb > 0:
             gain_vs_pbs = round((pb - ou) / pb * 100, 2)
 
     return {
-        "scenario": scenario, "seq_len": L,
-        "sparsity": round(sparsity, 4),
-        "flash_ms": round(flash_ms, 4),
-        "strategies": strats,
-        "gain_vs_pbs_pct": gain_vs_pbs,
-        "ours_decision": decision.summary(),
+        'scenario': scenario, 'seq_len': L,
+        'sparsity': round(sparsity, 4),
+        'flash_ms': round(flash_ms, 4),
+        'strategies': strats,
+        'gain_vs_pbs_pct': gain_vs_pbs,
+        'ours_decision': decision.summary(),
     }
-
-
-# ── Aggregation ───────────────────────────────────────────────────────────────
 
 def aggregate(cells: list[dict]) -> list[dict]:
     by_len: dict[int, list[dict]] = defaultdict(list)
