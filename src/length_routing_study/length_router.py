@@ -1,4 +1,4 @@
-"""
+﻿"""
 Length- and sparsity-aware routing algorithm for sparse attention methods.
 
 Given that a sparse attention backend MUST be used (the caller has already
@@ -83,11 +83,11 @@ class RoutingDecision:
 
     Fields
     ------
-    backend : "pbs" | "flex" | "structural" | "knorm" | "coverage"
+    backend : "pbs" | "flex" | "structural" | "knorm" | "coverage" | "sampled"
     params  : dict with backend-specific parameters
     reason  : human-readable justification string
     strategy_instance : optional SelectionStrategy object
-        For mask-based backends (structural / knorm / coverage), this holds
+        For mask-based backends (structural / knorm / coverage / sampled), this holds
         the ready-to-call strategy instance so callers can do:
             result = decision.strategy_instance.select(q, k, v, block_size)
     critical_sparsity : float
@@ -341,7 +341,7 @@ class LengthAwareRouter:
     # Empirical crossover on A800: PBS vs Flex crossover is at L≈64K–128K.
     # At L=32K, Flex selection overhead (≈35ms) still exceeds kernel savings.
     # We set flex_min_length=65536 to be safe.
-    flex_min_length: int = 65_536
+    flex_min_length: int = 0
 
     # Flex selection overhead model (empirically calibrated)
     flex_select_a: float = T_SELECT_FLEX_A
@@ -464,7 +464,7 @@ class LengthAwareRouter:
         )
 
         # ── Consider Flex only when L is large enough ──────────────────────
-        if L < self.flex_min_length:
+        if self.flex_min_length > 0 and L < self.flex_min_length:
             return dataclasses.replace(
                 pbs_decision,
                 reason=pbs_decision.reason +
@@ -530,171 +530,239 @@ class LengthAwareRouter:
         k_norm_cv: float = 1.0,
     ) -> RoutingDecision:
         """
-        Extended routing that considers ALL strategy tiers:
+        Extended routing that considers all strategy tiers.
 
-          Tier 0  O(1)     : DecayedWindowSink  (long-L optimised sink+window+stride)
-                             GlobalSinkWindow    (short-L conservative)
-          Tier 1  O(L)     : PBS (threshold + segment_size adaptive)
-          Tier 2  O(L·D)   : AdaptiveCoverage   (long-L: log-scaled coverage)
-                             HierarchicalKNorm  (two-level, lower sort overhead)
-          Tier 3  O(r·L²)  : FlexPrefill  (only at L ≥ flex_min_length)
-
-        Each decision carries a ``strategy_instance`` so callers can execute:
-            res = decision.strategy_instance.select(q, k, v, block_size)
-
-        Kernel time for mask-based strategies is estimated as:
-            T_kernel_est = T_flash(L) × active_fraction
-        (requires a real block-sparse Triton kernel for actual speedup;
-         currently executed via SDPA+bias for accuracy evaluation only).
+        This version applies conservative accuracy-aware guardrails:
+        more aggressive mask strategies are assigned larger active-set floors and
+        small risk penalties so they do not dominate the router purely through
+        optimistic latency estimates.
         """
         from length_routing_study.selection_strategies import (
-            DecayedWindowSink, GlobalSinkWindow,
-            AdaptiveCoverage, HierarchicalKNorm,
+            DecayedWindowSink,
+            GlobalSinkWindow,
+            SqrtWindow,
+            AdaptiveCoverage,
+            CoverageTarget,
+            HierarchicalKNorm,
+            BlockKNormTopK,
+            SampledAttentionTopK,
         )
+
+        def _clamp(x: float, lo: float = 0.05, hi: float = 1.0) -> float:
+            return max(lo, min(hi, x))
+
+        def _floors_for_length(length: int) -> tuple[float, float, float]:
+            if length <= 8_192:
+                return 0.34, 0.42, 0.30  # structural, sampled, data-driven
+            if length <= 32_768:
+                return 0.28, 0.36, 0.24
+            return 0.22, 0.30, 0.18
+
+        def _mask_candidate(
+            *,
+            backend: str,
+            inst: Any,
+            complexity: str,
+            active_est: float,
+            family: str,
+            risk_mult: float,
+            extra_params: dict[str, Any] | None = None,
+            t_sel_ms: float | None = None,
+        ) -> tuple[float, str, RoutingDecision]:
+            floor_struct, floor_sampled, floor_data = _floors_for_length(L)
+            family_floor = {
+                'structural': floor_struct,
+                'sampled': floor_sampled,
+                'data': floor_data,
+            }[family]
+            active_est = max(active_est, family_floor)
+            active_est = _clamp(active_est)
+            sel_ms = float(inst.t_overhead_ms(L) if t_sel_ms is None else t_sel_ms)
+            raw_total = sel_ms + self._t_kernel(L, active_est)
+            scored_total = raw_total * risk_mult
+            params = {
+                'strategy': inst.name,
+                'active_frac': round(active_est, 3),
+                'risk_mult': round(risk_mult, 2),
+            }
+            if extra_params:
+                params.update(extra_params)
+            decision = RoutingDecision(
+                backend=backend,
+                params=params,
+                reason=(
+                    f"{inst.name}({complexity}): est {raw_total:.2f} ms "
+                    f"(sel={sel_ms:.3f} ms, kernel?{self._t_kernel(L, active_est):.2f} ms, risk?{risk_mult:.2f})"
+                ),
+                strategy_instance=inst,
+                critical_sparsity=0.0,
+            )
+            return (scored_total, backend, decision)
 
         active_frac = max(0.05, 1.0 - sparsity)
+        num_blocks = max(1, L // 128)
 
-        # ── Tier 0: O(1) structural ───────────────────────────────────────
-        # At short L use GlobalSinkWindow (simple, well-understood).
-        # At long L use DecayedWindowSink (adds strided mid-range blocks).
-        # Expected active_fraction: structural strategies cover sink + local
-        # window, pruning ~50–70% of blocks depending on window size.
-        struct_active = max(0.25, min(0.70, active_frac * 1.1))
-        t_struct = self._t_struct_total(L, struct_active)
-
-        num_blocks    = max(1, L // 128)
-        window_blocks = max(4, round(num_blocks * 0.10))  # 10% local window
-        stride_blocks = max(2, round(num_blocks * 0.03))  # 3% strided global
-
-        if L >= 16_384:
-            # Long L: DecayedWindowSink covers local + strided past
-            struct_inst = DecayedWindowSink(
-                sink_blocks=2,
-                window_blocks=window_blocks,
-                stride_blocks=stride_blocks,
-            )
-        else:
-            struct_inst = GlobalSinkWindow(sink_blocks=2, window_blocks=window_blocks)
-
-        struct_decision = RoutingDecision(
-            backend="structural",
-            params={
-                "strategy":      struct_inst.name,
-                "sink_blocks":   2,
-                "window_blocks": window_blocks,
-                "stride_blocks": stride_blocks,
-                "active_frac":   round(struct_active, 2),
-            },
-            reason=(
-                f"Structural(O(1)): est {t_struct:.2f} ms "
-                f"(sel={self._t_select_struct():.3f} ms, "
-                f"kernel≈{self._t_kernel(L, struct_active):.2f} ms)"
-            ),
-            strategy_instance=struct_inst,
-            critical_sparsity=0.0,
-        )
-
-        # ── Tier 1: PBS ───────────────────────────────────────────────────
         pbs_decision = self.route(L, sparsity=sparsity, prefer_pbs=prefer_pbs)
         t_pbs = self._t_pbs_total(L, sparsity)
+        candidates: list[tuple[float, str, RoutingDecision]] = [(t_pbs, 'pbs', pbs_decision)]
 
-        # ── Tier 2: O(L·D) data-driven ────────────────────────────────────
-        # Two candidates — pick the one with lower estimated overhead:
-        #   AdaptiveCoverage : log-scaled coverage threshold, best for long L
-        #   HierarchicalKNorm: two-level sort, best when num_blocks is large
-        knorm_active = max(0.05, active_frac * 0.92)  # data-driven: better mask quality
-        t_cov  = self._t_knorm_total(L, knorm_active)  # both share similar overhead
-        t_hier = self._t_knorm_total(L, knorm_active * 0.97)  # hier slightly cheaper active
-
-        # AdaptiveCoverage: coverage shrinks with log(L) → better long-L sparsity
-        cov_base = min(0.90, 0.70 + active_frac * 0.25)
-        cov_min  = max(0.30, cov_base - 0.40)
-        cov_inst = AdaptiveCoverage(
-            base_coverage=round(cov_base, 2),
-            min_coverage=round(cov_min, 2),
-            alpha=0.09,
-            sink_blocks=1,
-        )
-        # HierarchicalKNorm: coarse_factor scales with sequence length
-        cf = 8 if L >= 32_768 else 4
-        hier_inst = HierarchicalKNorm(
-            coarse_factor=cf,
-            coarse_keep=0.50,
-            fine_keep=0.40,
-            sink_blocks=1,
-        )
-        # Pick lower-overhead O(L·D) candidate
-        if t_cov <= t_hier:
-            knorm_inst = cov_inst
-            knorm_backend = "coverage"
-            t_knorm = t_cov
-        else:
-            knorm_inst = hier_inst
-            knorm_backend = "knorm"
-            t_knorm = t_hier
-
-        knorm_decision = RoutingDecision(
-            backend=knorm_backend,
-            params={
-                "strategy":    knorm_inst.name,
-                "active_frac": round(knorm_active, 2),
-            },
-            reason=(
-                f"{knorm_inst.name}(O(L·D)): est {t_knorm:.2f} ms "
-                f"(sel={self._t_select_knorm(L):.3f} ms, "
-                f"kernel≈{self._t_kernel(L, knorm_active):.2f} ms)"
-            ),
-            strategy_instance=knorm_inst,
-            critical_sparsity=0.0,
-        )
-
-        # ── Compare all tiers ─────────────────────────────────────────────
-        # When k_norm_cv < 0.40 (directional attention: Q-K dot product matters
-        # more than K-norm magnitude), structural and K-norm mask selectors
-        # produce poor accuracy because they select by wrong criterion.
-        # In this regime, restrict to PBS (block attention scores) which
-        # correctly captures attention from actual Q-K interactions.
         _knorm_ok = k_norm_cv >= 0.40
 
-        candidates: list[tuple[float, str, RoutingDecision]] = [
-            (t_pbs, "pbs", pbs_decision),
-        ]
-        if _knorm_ok:
-            candidates += [
-                (t_struct, "structural", struct_decision),
-                (t_knorm,  "knorm",      knorm_decision),
-            ]
+        if True:
+            window_blocks = max(8, round(num_blocks * 0.15))
+            stride_blocks = max(2, round(num_blocks * 0.02))
+            structural_candidates: list[tuple[float, str, RoutingDecision]] = []
+            structural_allowed = (_knorm_ok and sparsity >= 0.60 and L >= 16_384) or (L >= 65_536 and sparsity >= 0.72)
 
-        # Add Flex only if L is large enough
-        if L >= self.flex_min_length:
+            if structural_allowed:
+                structural_candidates.append(
+                    _mask_candidate(
+                        backend='structural',
+                        inst=GlobalSinkWindow(sink_blocks=2, window_blocks=window_blocks),
+                        complexity='O(1)',
+                        active_est=_clamp(0.72 * active_frac + 0.14, 0.30, 0.82),
+                        family='structural',
+                        risk_mult=1.55,
+                        extra_params={'sink_blocks': 2, 'window_blocks': window_blocks},
+                    )
+                )
+
+                if sparsity >= 0.68:
+                    structural_candidates.append(
+                        _mask_candidate(
+                            backend='structural',
+                            inst=SqrtWindow(sink_blocks=2),
+                            complexity='O(1)',
+                            active_est=_clamp(0.62 * active_frac + 0.18, 0.28, 0.72),
+                            family='structural',
+                            risk_mult=1.80,
+                            extra_params={'sink_blocks': 2},
+                        )
+                    )
+
+                if L >= 16_384:
+                    structural_candidates.append(
+                        _mask_candidate(
+                            backend='structural',
+                            inst=DecayedWindowSink(sink_blocks=2, window_blocks=window_blocks, stride_blocks=stride_blocks),
+                            complexity='O(1)',
+                            active_est=_clamp(0.66 * active_frac + 0.14, 0.30, 0.78),
+                            family='structural',
+                            risk_mult=1.60,
+                            extra_params={'sink_blocks': 2, 'window_blocks': window_blocks, 'stride_blocks': stride_blocks},
+                        )
+                    )
+
+                candidates.append(min(structural_candidates, key=lambda x: x[0]))
+
+            topk_scale = 0.90 if _knorm_ok else 1.00
+            topk_frac = round(_clamp(active_frac * topk_scale, 0.40, 0.70), 2)
+            cov_target = round(_clamp(0.91 + active_frac * 0.08 + (0.02 if not _knorm_ok else 0.0), 0.93, 0.99), 2)
+            cov_base = round(_clamp(0.89 + active_frac * 0.10 + (0.02 if not _knorm_ok else 0.0), 0.92, 0.98), 2)
+            cov_min = round(_clamp(cov_base - 0.18, 0.70, 0.86), 2)
+            coarse_factor = 8 if L >= 32_768 else 4
+            coarse_keep = 0.74 if _knorm_ok else 0.82
+            fine_keep = 0.64 if _knorm_ok else 0.72
+            if L <= 16_384:
+                topk_frac = round(max(topk_frac, 0.55), 2)
+                cov_target = round(max(cov_target, 0.96), 2)
+                cov_base = round(max(cov_base, 0.95), 2)
+                cov_min = round(max(cov_min, 0.80), 2)
+                coarse_keep = min(0.90, coarse_keep + 0.08)
+                fine_keep = min(0.82, fine_keep + 0.08)
+
+            data_candidates = [
+                _mask_candidate(
+                    backend='knorm',
+                    inst=BlockKNormTopK(topk_frac=topk_frac, sink_blocks=1),
+                    complexity='O(L?D)',
+                    active_est=_clamp((0.62 if _knorm_ok else 0.68) * active_frac + 0.16, 0.30, 0.72),
+                    family='data',
+                    risk_mult=1.08 if _knorm_ok else 1.14,
+                    extra_params={'topk_frac': topk_frac, 'sink_blocks': 1},
+                ),
+                _mask_candidate(
+                    backend='coverage',
+                    inst=CoverageTarget(target_coverage=cov_target, sink_blocks=1),
+                    complexity='O(L?D)',
+                    active_est=_clamp((0.60 if _knorm_ok else 0.66) * active_frac + 0.18 + (0.04 if L <= 16_384 else 0.0), 0.36, 0.78),
+                    family='data',
+                    risk_mult=(0.98 if L <= 16_384 else 1.00) if _knorm_ok else (1.00 if L <= 16_384 else 1.03),
+                    extra_params={'target_coverage': cov_target, 'sink_blocks': 1},
+                ),
+                _mask_candidate(
+                    backend='coverage',
+                    inst=AdaptiveCoverage(base_coverage=cov_base, min_coverage=cov_min, alpha=0.09, sink_blocks=1),
+                    complexity='O(L?D)',
+                    active_est=_clamp((0.58 if _knorm_ok else 0.64) * active_frac + 0.16 + (0.04 if L <= 16_384 else 0.0), 0.34, 0.74),
+                    family='data',
+                    risk_mult=(0.98 if L <= 16_384 else 1.00) if _knorm_ok else (1.00 if L <= 16_384 else 1.03),
+                    extra_params={'base_coverage': cov_base, 'min_coverage': cov_min, 'alpha': 0.09, 'sink_blocks': 1},
+                ),
+                _mask_candidate(
+                    backend='knorm',
+                    inst=HierarchicalKNorm(coarse_factor=coarse_factor, coarse_keep=coarse_keep, fine_keep=fine_keep, sink_blocks=1),
+                    complexity='O(L?D)',
+                    active_est=_clamp((0.60 if _knorm_ok else 0.66) * active_frac + 0.16 + (0.05 if L <= 16_384 else 0.0), 0.34, 0.74),
+                    family='data',
+                    risk_mult=(1.04 if L <= 16_384 else 1.00) if _knorm_ok else (1.08 if L <= 16_384 else 1.02),
+                    extra_params={'coarse_factor': coarse_factor, 'coarse_keep': coarse_keep, 'fine_keep': fine_keep, 'sink_blocks': 1},
+                ),
+            ]
+            candidates.append(min(data_candidates, key=lambda x: x[0]))
+
+        sampled_allowed = (not _knorm_ok) and sparsity <= 0.35
+        if sampled_allowed:
+            sample_rows = 32 if L <= 16_384 else (16 if L <= 65_536 else 8)
+            sampled_topk_frac = round(_clamp(active_frac * 0.98, 0.52, 0.70), 2)
+            sampled_inst = SampledAttentionTopK(
+                sample_rows=sample_rows,
+                topk_frac=sampled_topk_frac,
+                sink_blocks=1,
+                seed=0,
+            )
+            t_sampled_sel = self._t_select_sampled(L, sample_rows=sample_rows)
+            candidates.append(
+                _mask_candidate(
+                    backend='sampled',
+                    inst=sampled_inst,
+                    complexity='O(r?L?D)',
+                    active_est=_clamp(0.72 * active_frac + 0.16, 0.38, 0.78),
+                    family='sampled',
+                    risk_mult=1.38,
+                    extra_params={'sample_rows': sample_rows, 'topk_frac': sampled_topk_frac, 'sink_blocks': 1},
+                    t_sel_ms=t_sampled_sel,
+                )
+            )
+
+        if self.flex_min_length <= 0 or L >= self.flex_min_length:
             t_flex = self._t_flex_total(L, sparsity)
-            flex_tau   = pick_flex_tau(L)
+            flex_tau = pick_flex_tau(L)
             flex_gamma = pick_flex_gamma(L, sparsity)
             flex_decision = RoutingDecision(
-                backend="flex",
+                backend='flex',
                 params={
-                    "gamma": flex_gamma, "tau": flex_tau,
-                    "min_budget_frac": 0.0, "block_size": FLEX_BLOCK_SIZE,
+                    'gamma': flex_gamma,
+                    'tau': flex_tau,
+                    'min_budget_frac': 0.0,
+                    'block_size': FLEX_BLOCK_SIZE,
                 },
                 reason=(
-                    f"Flex(O(r·L·D)): est {t_flex:.2f} ms "
+                    f"Flex(O(r?L?D)): est {t_flex:.2f} ms "
                     f"(sel={self._t_select_flex(L):.2f} ms)"
                 ),
                 critical_sparsity=0.0,
             )
-            candidates.append((t_flex, "flex", flex_decision))
+            candidates.append((t_flex, 'flex', flex_decision))
 
-        # Pick lowest estimated latency; tie-break: prefer PBS over structural
         best_t, best_name, best_decision = min(candidates, key=lambda x: x[0])
-
         return dataclasses.replace(
             best_decision,
             reason=(
                 best_decision.reason
-                + f" | all candidates: "
-                + ", ".join(
-                    f"{n}={t:.2f}ms" for t, n, _ in
-                    sorted(candidates, key=lambda x: x[0])
+                + ' | all candidates: '
+                + ', '.join(
+                    f"{n}={t:.2f}ms" for t, n, _ in sorted(candidates, key=lambda x: x[0])
                 )
             ),
         )
