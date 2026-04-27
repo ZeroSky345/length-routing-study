@@ -1,4 +1,4 @@
-"""
+﻿"""
 Empirical PBS / FlexPrefill kernel sweep.
 
 Runs the **real** PBS and FlexPrefill CUDA/Triton kernels across a
@@ -108,7 +108,7 @@ class FlexConfig:
 
 @dataclass
 class EmpiricalRecord:
-    """Single (kernel-config × sequence-length) measurement cell."""
+    """Single (kernel-config ? sequence-length) measurement cell."""
 
     backend:     str          # "pbs" | "flexprefill" | "flash"
     config_name: str
@@ -120,16 +120,13 @@ class EmpiricalRecord:
     t_p50_ms:    float
     t_p95_ms:    float
 
-    # Decomposed timing: selection overhead vs sparse-kernel time
-    # t_select_ms: cost of selecting/permuting blocks (before kernel launch)
-    # t_kernel_ms: cost of the sparse attention kernel itself
-    # t_mean_ms = t_select_ms + t_kernel_ms  (approximately)
     t_select_ms: float = 0.0
     t_kernel_ms: float = 0.0
 
     mse:         float = 0.0
     kl:          float = 0.0
-    active_fraction: float = 1.0   # fraction of blocks actually computed
+    kernel_time_ratio: float | None = None
+    active_block_fraction: float | None = None
 
     passed_mse:  bool  = True
     passed_kl:   bool  = True
@@ -137,6 +134,12 @@ class EmpiricalRecord:
     @property
     def passed(self) -> bool:
         return self.passed_mse and self.passed_kl
+
+    @property
+    def active_fraction(self) -> float | None:
+        if self.active_block_fraction is not None:
+            return self.active_block_fraction
+        return self.kernel_time_ratio
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -150,14 +153,68 @@ class EmpiricalRecord:
             "t_p95_ms":    self.t_p95_ms,
             "t_select_ms": self.t_select_ms,
             "t_kernel_ms": self.t_kernel_ms,
-            "active_fraction": self.active_fraction,
+            "kernel_time_ratio": self.kernel_time_ratio,
+            "active_block_fraction": self.active_block_fraction,
             "mse": self.mse,
             "kl":  self.kl,
             "passed": self.passed,
         }
 
 
-# ── Flash reference ───────────────────────────────────────────────────────────
+def _causal_block_fraction(mask: torch.Tensor) -> float:
+    if mask.dim() == 4:
+        _, _, q_blocks, kv_blocks = mask.shape
+        valid = torch.tril(torch.ones((q_blocks, kv_blocks), dtype=torch.bool, device=mask.device), diagonal=(kv_blocks - q_blocks))
+        denom = int(valid.sum().item()) * int(mask.shape[0]) * int(mask.shape[1])
+        numer = int((mask.to(torch.bool) & valid[None, None, :, :]).sum().item())
+        return numer / max(1, denom)
+    if mask.dim() == 2:
+        q_blocks, kv_blocks = mask.shape
+        valid = torch.tril(torch.ones((q_blocks, kv_blocks), dtype=torch.bool, device=mask.device), diagonal=(kv_blocks - q_blocks))
+        denom = int(valid.sum().item())
+        numer = int((mask.to(torch.bool) & valid).sum().item())
+        return numer / max(1, denom)
+    raise ValueError(f"unsupported mask rank: {mask.dim()}")
+
+
+def _measure_pbs_active_block_fraction(
+    q: torch.Tensor,
+    k: torch.Tensor,
+    cfg: PBSConfig,
+) -> float | None:
+    try:
+        from pbs_attn.src.pbs import permuted_block_selection
+        from pbs_attn.src.permute_states import apply_permutation
+    except ImportError:
+        return None
+
+    batch_size, num_q_heads, q_len, _ = q.shape
+    batch_size, num_kv_heads, kv_len, _ = k.shape
+    if num_q_heads != num_kv_heads or q_len != kv_len:
+        return None
+
+    with torch.inference_mode():
+        perm_key_states, perm_key_indices = apply_permutation(
+            query_states=q,
+            key_states=k,
+            block_size=cfg.block_size,
+            segment_size=cfg.segment_size,
+        )
+        perm_query_states = q
+        perm_query_indices = torch.arange(q_len, device=q.device).unsqueeze(0).unsqueeze(0).expand(batch_size, num_q_heads, -1)
+        _, block_mask, segment_mask = permuted_block_selection(
+            permuted_query_states=perm_query_states,
+            permuted_key_states=perm_key_states,
+            query_indices=perm_query_indices,
+            key_indices=perm_key_indices,
+            block_size=cfg.block_size,
+            segment_size=cfg.segment_size,
+            threshold=cfg.threshold,
+            causal=True,
+            force_select_first_block=cfg.force_first,
+        )
+        full_mask = block_mask | segment_mask[None, None, :, :]
+    return _causal_block_fraction(full_mask)
 
 def run_flash(
     q: torch.Tensor,
@@ -255,24 +312,17 @@ def run_pbs_decomposed(
     """
     Run PBS with timing decomposed into t_select and t_kernel.
 
-    Method: run PBS with threshold=1.0 (select ALL blocks — no sparsity).
-    This measures pure selection overhead without any kernel savings.
-    Then subtract flash_time_ms to isolate the selection cost.
-
-      t_select = t_pbs(thr=1.0) - t_flash
-      t_kernel = t_pbs(cfg.threshold) - t_select
-
-    If t_pbs(thr=1.0) is not measurable (e.g. threshold=1.0 would fail),
-    we fall back to a linear regression estimate.
+    ``kernel_time_ratio`` is a latency proxy: t_kernel / t_flash.
+    ``active_block_fraction`` is measured separately from the actual PBS block
+    mask, so downstream analysis can distinguish true block density from timing.
     """
     try:
         from pbs_attn.src.pbs import permuted_block_sparse_attn_fwd
     except ImportError as e:
         raise ImportError("pbs_attn not found. Set LRS_PBS_ROOT.") from e
 
-    # ── Step 1: measure t_select via threshold=1.0 (dense PBS) ────────────
     dense_cfg = PBSConfig(
-        threshold=1.0,               # select every block
+        threshold=1.0,
         segment_size=cfg.segment_size,
         block_size=cfg.block_size,
         use_triton=cfg.use_triton,
@@ -301,15 +351,12 @@ def run_pbs_decomposed(
                 _, ms = _cuda_ms(_call_dense)
             dense_lats.append(ms)
         t_dense_pbs = float(torch.tensor(dense_lats).mean())
-        # selection overhead ≈ PBS_dense - Flash
         t_select = max(0.0, t_dense_pbs - flash_time_ms)
     except Exception:
-        # Fallback: linear model from LengthAwareRouter constants
         from .length_router import T_SELECT_PBS_A, T_SELECT_PBS_B
         L = q.shape[2]
         t_select = T_SELECT_PBS_A * L + T_SELECT_PBS_B
 
-    # ── Step 2: measure sparse PBS ────────────────────────────────────────
     normal_rec = run_pbs(
         q, k, v, cfg, reference=reference,
         warmup=warmup, repeats=repeats,
@@ -317,7 +364,8 @@ def run_pbs_decomposed(
     )
 
     t_kernel = max(0.0, normal_rec.t_mean_ms - t_select)
-    active_fraction = t_kernel / max(1e-6, flash_time_ms)
+    kernel_time_ratio = t_kernel / max(1e-6, flash_time_ms)
+    active_block_fraction = _measure_pbs_active_block_fraction(q, k, cfg)
 
     return EmpiricalRecord(
         backend=normal_rec.backend,
@@ -330,15 +378,13 @@ def run_pbs_decomposed(
         t_p95_ms=normal_rec.t_p95_ms,
         t_select_ms=round(t_select, 4),
         t_kernel_ms=round(t_kernel, 4),
-        active_fraction=round(min(1.0, active_fraction), 4),
+        kernel_time_ratio=round(kernel_time_ratio, 4),
+        active_block_fraction=(None if active_block_fraction is None else round(active_block_fraction, 4)),
         mse=normal_rec.mse,
         kl=normal_rec.kl,
         passed_mse=normal_rec.passed_mse,
         passed_kl=normal_rec.passed_kl,
     )
-
-
-# ── Flex kernel ───────────────────────────────────────────────────────────────
 
 def run_flex(
     q: torch.Tensor, k: torch.Tensor, v: torch.Tensor,
