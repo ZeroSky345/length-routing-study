@@ -1,4 +1,4 @@
-"""
+﻿"""
 Mask-based selection strategies for block-sparse attention.
 
 These strategies sit between two extremes:
@@ -60,68 +60,66 @@ except Exception:
 class SelectionResult:
     """Output of ``strategy.select()``."""
     strategy_name: str
-    block_mask: torch.Tensor   # [num_blocks] bool — True = compute this block
-    sparsity:   float          # fraction of blocks pruned  (1 − active_frac)
+    block_mask: torch.Tensor   # [q_blocks, kv_blocks] bool ? True = compute this block pair
+    sparsity:   float          # fraction of valid causal block pairs pruned  (1 ? active_frac)
     t_select_ms: float         # measured wall-clock selection time (ms)
     meta: dict[str, Any] = field(default_factory=dict)
 
+    def __post_init__(self) -> None:
+        self.block_mask = _ensure_causal_2d_mask(self.block_mask)
+        self.sparsity = max(0.0, min(1.0, 1.0 - _causal_block_density(self.block_mask)))
+
     @property
     def active_fraction(self) -> float:
-        return 1.0 - self.sparsity
+        return _causal_block_density(self.block_mask)
 
     @property
     def num_active(self) -> int:
         return int(self.block_mask.sum().item())
 
 
-# ─── Attention runner ──────────────────────────────────────────────────────────
+def _ensure_causal_2d_mask(block_mask: torch.Tensor) -> torch.Tensor:
+    if block_mask.dim() == 2:
+        return block_mask.to(dtype=torch.bool)
+    if block_mask.dim() != 1:
+        raise ValueError(f"expected 1D or 2D block mask, got shape {tuple(block_mask.shape)}")
+    kv_keep = block_mask.to(dtype=torch.bool)
+    num_blocks = int(kv_keep.numel())
+    causal = torch.tril(torch.ones((num_blocks, num_blocks), dtype=torch.bool, device=kv_keep.device))
+    return causal & kv_keep.unsqueeze(0)
+
+
+def _causal_block_density(block_mask_2d: torch.Tensor) -> float:
+    q_blocks, kv_blocks = block_mask_2d.shape
+    diag = kv_blocks - q_blocks
+    valid = torch.tril(torch.ones((q_blocks, kv_blocks), dtype=torch.bool, device=block_mask_2d.device), diagonal=diag)
+    denom = int(valid.sum().item())
+    if denom <= 0:
+        return 1.0
+    numer = int((block_mask_2d.to(torch.bool) & valid).sum().item())
+    return numer / denom
 
 def run_block_sparse_attention(
     q: torch.Tensor,  # [B, H, L, D]
     k: torch.Tensor,
     v: torch.Tensor,
-    block_mask: torch.Tensor,  # [num_blocks] bool
+    block_mask: torch.Tensor,  # [q_blocks, kv_blocks] bool
     block_size: int = 128,
     causal: bool = True,
 ) -> torch.Tensor:
-    """
-    Run attention restricted to the blocks selected by block_mask.
-
-    This implementation builds a token-level attention bias (0 or -inf) from
-    the block mask and passes it to F.scaled_dot_product_attention.  It is
-    **not** computationally sparse (SDPA still runs the full O(L²) kernel), but
-    it produces the mathematically correct output for accuracy evaluation.
-
-    For latency estimation, use:
-        t_kernel_est = t_flash_ref × active_fraction
-    """
+    del causal
     B, H, L, D = q.shape
-    num_blocks = L // block_size
-    extra = L - num_blocks * block_size
-
-    # Expand block_mask to token level
-    token_keep = block_mask.repeat_interleave(block_size)  # [num_blocks * block_size]
-    if extra > 0:
-        # Trailing tokens not covered by full blocks: keep them
-        token_keep = torch.cat([token_keep,
-                                token_keep.new_ones(extra)], dim=0)
-
-    # Build attention bias: 0 for allowed keys, -inf for masked keys
-    # Shape: [1, 1, 1, L] → broadcast over (B, H, q_len, k_len)
+    block_mask_2d = _ensure_causal_2d_mask(block_mask)
+    token_mask = block_mask_2d.repeat_interleave(block_size, dim=0).repeat_interleave(block_size, dim=1)
+    token_mask = token_mask[:L, :L]
     bias = torch.where(
-        token_keep.unsqueeze(0).unsqueeze(0).unsqueeze(0),   # [1,1,1,L]
-        torch.zeros(1, 1, 1, L, device=q.device, dtype=q.dtype),
-        torch.full((1, 1, 1, L), float("-inf"), device=q.device, dtype=q.dtype),
+        token_mask.unsqueeze(0).unsqueeze(0),
+        torch.zeros(1, 1, L, L, device=q.device, dtype=q.dtype),
+        torch.full((1, 1, L, L), float('-inf'), device=q.device, dtype=q.dtype),
     )
-
     with torch.inference_mode():
-        out = F.scaled_dot_product_attention(
-            q, k, v,
-            attn_mask=bias,
-            is_causal=False,   # causal handled by block_mask selection
-        )
+        out = F.scaled_dot_product_attention(q, k, v, attn_mask=bias, is_causal=False)
     return out
-
 
 def bool_mask_to_flex_block_mask(
     bool_mask_2d: torch.Tensor,
@@ -146,11 +144,11 @@ def bool_mask_to_flex_block_mask(
     Requires PyTorch ≥ 2.3 with ``torch.nn.attention.flex_attention``.
     """
     if not _HAS_FLEX:
-        raise RuntimeError("flex_attention not available (requires PyTorch ≥ 2.3)")
+        raise RuntimeError("flex_attention not available (requires PyTorch ? 2.3)")
 
-    q_blocks = kv_blocks = L // block_size
-    dev = bool_mask_2d.device
-    bm  = bool_mask_2d.to(dev)
+    bm = _ensure_causal_2d_mask(bool_mask_2d)
+    q_blocks, kv_blocks = bm.shape
+    dev = bm.device
 
     lower = torch.tril(
         torch.ones(q_blocks, q_blocks, dtype=torch.bool, device=dev), diagonal=-1
